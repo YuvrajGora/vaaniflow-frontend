@@ -1,6 +1,5 @@
 import React from 'react';
-import { Phone, Sparkles, Mic, CheckCircle, ShieldCheck, PhoneForwarded, Globe } from 'lucide-react';
-import { Card } from '../common/Card';
+import { Phone, Mic, CheckCircle, PhoneForwarded, Globe, Info } from 'lucide-react';
 import { Badge } from '../common/Badge';
 
 interface LivePreviewCardProps {
@@ -27,8 +26,7 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({
   language = 'en-US',
   persona,
   requiredFields = [],
-  escalationPhone,
-  isAiGenerated = true
+  escalationPhone
 }) => {
   const formatLanguageLabel = (code: string) => {
     switch (code) {
@@ -46,33 +44,35 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({
   };
 
   return (
-    <Card
+    <div
       style={{
         position: 'sticky',
         top: 'calc(var(--header-height) + 1.5rem)',
-        background: 'linear-gradient(180deg, #111827 0%, #0B101C 100%)',
+        background: 'var(--bg-surface)',
         border: '1px solid var(--border-default)',
-        boxShadow: 'var(--shadow-md)'
+        borderRadius: 'var(--radius-md)',
+        padding: '1.75rem',
+        boxShadow: 'var(--shadow-sm)'
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+      {/* Top Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <Sparkles size={16} style={{ color: 'var(--cyan-400)' }} />
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>
-            Caller Experience Preview
+          <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent-primary)' }}>
+            Caller Experience Simulation
           </span>
         </div>
         <Badge variant={status === 'active' ? 'active' : 'muted'} dot={status === 'active'}>
-          {status === 'active' ? 'Ready to Deploy' : 'Draft'}
+          {status === 'active' ? 'Ready to Save' : 'Draft'}
         </Badge>
       </div>
 
-      {/* Simulated Phone Call Card */}
+      {/* Agent Call Identity Banner */}
       <div
         style={{
-          background: 'rgba(0, 0, 0, 0.4)',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border-subtle)',
+          background: 'var(--bg-surface-raised)',
+          borderRadius: 'var(--radius-sm)',
+          border: '1px solid var(--border-default)',
           padding: '1.25rem',
           textAlign: 'center',
           marginBottom: '1.25rem'
@@ -80,56 +80,71 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({
       >
         <div
           style={{
-            width: '56px',
-            height: '56px',
+            width: '44px',
+            height: '44px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(6, 182, 212, 0.05) 100%)',
-            border: '2px solid var(--cyan-400)',
-            margin: '0 auto 0.75rem',
+            background: 'var(--accent-subtle)',
+            border: '1px solid var(--accent-border)',
+            margin: '0 auto 0.65rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--cyan-300)',
-            boxShadow: '0 0 20px rgba(6, 182, 212, 0.25)'
+            color: 'var(--accent-primary)'
           }}
         >
-          <Phone size={24} />
+          <Phone size={19} />
         </div>
 
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '0.15rem' }}>
-          {agentName || 'AI Receptionist'}
+        <h3
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            color: 'var(--text-primary)',
+            marginBottom: '0.15rem'
+          }}
+        >
+          {agentName || 'Voice AI Receptionist'}
         </h3>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.65rem' }}>
           {businessName || 'Your Business Name'}
         </p>
 
+        {/* Voice and Language pills */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', color: 'var(--cyan-300)', background: 'var(--cyan-subtle)', padding: '0.2rem 0.55rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--cyan-border)' }}>
-            <Mic size={12} />
-            <span>Voice: {voiceName || 'Rachel'}</span>
-          </div>
+          {voiceName && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', color: 'var(--text-secondary)', background: 'var(--bg-surface)', padding: '0.2rem 0.55rem', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-default)' }}>
+              <Mic size={11} style={{ color: 'var(--accent-primary)' }} />
+              <span>Voice: {voiceName}</span>
+            </div>
+          )}
 
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', color: 'var(--text-secondary)', background: 'rgba(255, 255, 255, 0.05)', padding: '0.2rem 0.55rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-hairline)' }}>
-            <Globe size={11} />
-            <span>{formatLanguageLabel(language)}</span>
-          </div>
+          {language && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', color: 'var(--text-secondary)', background: 'var(--bg-surface)', padding: '0.2rem 0.55rem', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-default)' }}>
+              <Globe size={11} />
+              <span>{formatLanguageLabel(language)}</span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Opening Greeting Speech Bubble */}
-      <div style={{ marginBottom: '1rem' }}>
+      {/* Opening Greeting Speech Box */}
+      <div style={{ marginBottom: '1.25rem' }}>
         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem', fontWeight: 500 }}>
           Caller Greeting (First words spoken upon answer):
         </span>
         <div
           style={{
             background: 'var(--bg-surface-raised)',
-            padding: '0.85rem 1rem',
-            borderRadius: 'var(--radius-md)',
-            borderLeft: '3px solid var(--cyan-400)',
-            fontSize: '0.825rem',
+            padding: '0.9rem 1.05rem',
+            borderRadius: 'var(--radius-sm)',
+            borderLeft: '3px solid var(--accent-primary)',
+            borderTop: '1px solid var(--border-hairline)',
+            borderRight: '1px solid var(--border-hairline)',
+            borderBottom: '1px solid var(--border-hairline)',
+            fontSize: '0.875rem',
             color: 'var(--text-primary)',
-            lineHeight: 1.5,
+            lineHeight: 1.55,
             fontStyle: 'italic'
           }}
         >
@@ -139,9 +154,11 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({
 
       {/* Persona excerpt */}
       {persona && (
-        <div style={{ marginBottom: '1rem', padding: '0.65rem 0.75rem', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-hairline)' }}>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Persona Tone</span>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, marginTop: '0.2rem', lineHeight: 1.4 }}>
+        <div style={{ marginBottom: '1rem', padding: '0.65rem 0.75rem', background: 'var(--bg-surface-raised)', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-default)' }}>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
+            Persona Demeanor
+          </span>
+          <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, marginTop: '0.2rem', lineHeight: 1.45 }}>
             {persona}
           </p>
         </div>
@@ -151,7 +168,7 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({
       {requiredFields.length > 0 && (
         <div style={{ marginBottom: '1rem' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem', fontWeight: 500 }}>
-            Information collected before booking:
+            Information collected from caller:
           </span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
             {requiredFields.slice(0, 4).map((field, idx) => (
@@ -160,10 +177,10 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({
                 style={{
                   fontSize: '0.7rem',
                   padding: '0.15rem 0.45rem',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(6, 182, 212, 0.08)',
-                  color: 'var(--cyan-300)',
-                  border: '1px solid rgba(6, 182, 212, 0.25)'
+                  borderRadius: 'var(--radius-xs)',
+                  background: 'var(--bg-surface-raised)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border-default)'
                 }}
               >
                 ✓ {field}
@@ -173,13 +190,13 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({
         </div>
       )}
 
-      {/* Trained FAQs Preview */}
+      {/* Sample Queries */}
       {sampleQueries.length > 0 && (
         <div style={{ marginBottom: '1rem' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', fontWeight: 500 }}>
-            Trained to handle caller queries like:
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem', fontWeight: 500 }}>
+            Trained to answer inquiries like:
           </span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
             {sampleQueries.map((query, index) => (
               <div
                 key={index}
@@ -187,11 +204,11 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.45rem',
-                  fontSize: '0.78rem',
+                  fontSize: '0.76rem',
                   color: 'var(--text-secondary)'
                 }}
               >
-                <CheckCircle size={13} style={{ color: 'var(--cyan-400)', flexShrink: 0 }} />
+                <CheckCircle size={12} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
                 <span>"{query}"</span>
               </div>
             ))}
@@ -201,33 +218,28 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({
 
       {/* Escalation Route */}
       {escalationPhone && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.72rem', color: 'var(--amber-400)', marginBottom: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.74rem', color: 'var(--status-warning)', marginBottom: '0.75rem' }}>
           <PhoneForwarded size={12} />
           <span>Emergency Handoff Line: {escalationPhone}</span>
         </div>
       )}
 
-      {/* Safe integration footer note */}
+      {/* Truthful Preview Disclaimer Footer */}
       <div
         style={{
           marginTop: '0.75rem',
           paddingTop: '0.75rem',
-          borderTop: '1px solid var(--border-hairline)',
+          borderTop: '1px solid var(--border-default)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          gap: '0.4rem',
           fontSize: '0.72rem',
           color: 'var(--text-muted)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <ShieldCheck size={14} style={{ color: 'var(--emerald-400)' }} />
-          <span>ElevenLabs React SDK ready</span>
-        </div>
-        {isAiGenerated && (
-          <Badge variant="mock">AI Draft</Badge>
-        )}
+        <Info size={13} style={{ flexShrink: 0 }} />
+        <span>Simulated preview • Reflects draft dialogue, voice & rules</span>
       </div>
-    </Card>
+    </div>
   );
 };

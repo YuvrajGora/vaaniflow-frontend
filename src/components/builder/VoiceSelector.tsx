@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Mic, Check } from 'lucide-react';
+import { Volume2, VolumeX, Check } from 'lucide-react';
 import type { VoiceOption } from '../../types/agent';
 
 interface VoiceSelectorProps {
@@ -15,68 +15,58 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
 }) => {
   const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
 
+  const isSpeechAvailable = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
   const handlePlaySample = (e: React.MouseEvent, voice: VoiceOption) => {
     e.stopPropagation();
 
-    // If currently playing, stop
     if (playingVoiceId === voice.id) {
-      if ('speechSynthesis' in window) {
+      if (isSpeechAvailable) {
         window.speechSynthesis.cancel();
       }
       setPlayingVoiceId(null);
       return;
     }
 
-    // Try Web SpeechSynthesis as client-side preview demonstration
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // stop any active speech
+    if (isSpeechAvailable) {
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(voice.previewSampleText);
 
-      // Attempt to pick matching gender or accent voice if available in browser
       const availableVoices = window.speechSynthesis.getVoices();
       if (voice.gender === 'female') {
-        const femaleVoice = availableVoices.find(v => /female|samantha|zira|victoria|karen/i.test(v.name));
+        const femaleVoice = availableVoices.find((v) => /female|samantha|zira|victoria|karen/i.test(v.name));
         if (femaleVoice) utterance.voice = femaleVoice;
       } else {
-        const maleVoice = availableVoices.find(v => /male|david|george|daniel|alex/i.test(v.name));
+        const maleVoice = availableVoices.find((v) => /male|david|george|daniel|alex/i.test(v.name));
         if (maleVoice) utterance.voice = maleVoice;
       }
 
-      utterance.rate = 1.0;
+      utterance.rate = 0.98;
       utterance.pitch = voice.gender === 'female' ? 1.05 : 0.95;
 
-      utterance.onend = () => {
-        setPlayingVoiceId(null);
-      };
-      utterance.onerror = () => {
-        setPlayingVoiceId(null);
-      };
+      utterance.onend = () => setPlayingVoiceId(null);
+      utterance.onerror = () => setPlayingVoiceId(null);
 
       setPlayingVoiceId(voice.id);
       window.speechSynthesis.speak(utterance);
     } else {
-      // Fallback: visual simulation for 3 seconds
-      setPlayingVoiceId(voice.id);
-      setTimeout(() => setPlayingVoiceId(null), 3500);
+      // Audio preview unavailable in this environment
+      setPlayingVoiceId(null);
     }
   };
 
   return (
-    <div style={{ marginBottom: '1.75rem' }}>
-      <label className="vf-label" style={{ marginBottom: '0.75rem' }}>
-        <span>2. ElevenLabs Curated Voice Persona</span>
-        <span style={{ fontSize: '0.75rem', color: 'var(--cyan-400)' }}>
-          Click "Preview Voice" to hear speech tone
+    <div style={{ marginBottom: '1.25rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+        <label className="vf-label" style={{ margin: 0 }}>
+          <span>Curated ElevenLabs Voice Persona</span>
+        </label>
+        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+          {isSpeechAvailable ? 'Click "Sample Voice" to hear tone' : 'Browser audio preview unavailable'}
         </span>
-      </label>
+      </div>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-          gap: '0.75rem'
-        }}
-      >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
         {voices.map((voice) => {
           const isSelected = selectedVoiceId === voice.id;
           const isPlaying = playingVoiceId === voice.id;
@@ -86,93 +76,91 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
               key={voice.id}
               onClick={() => onSelectVoice(voice)}
               style={{
-                backgroundColor: isSelected ? 'var(--cyan-subtle)' : 'var(--bg-surface)',
-                border: isSelected ? '1px solid var(--cyan-400)' : '1px solid var(--border-default)',
-                borderRadius: 'var(--radius-md)',
-                padding: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.75rem 1rem',
+                backgroundColor: isSelected ? 'var(--accent-subtle)' : 'var(--bg-surface-warm)',
+                border: isSelected ? '1px solid var(--accent-primary)' : '1px solid var(--border-default)',
+                borderRadius: 'var(--radius-sm)',
                 cursor: 'pointer',
                 transition: 'all var(--transition-fast)',
-                position: 'relative'
+                gap: '1rem',
+                flexWrap: 'wrap'
               }}
             >
-              {isSelected && (
+              {/* Left: Radio check + Voice details */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: '220px' }}>
                 <div
                   style={{
-                    position: 'absolute',
-                    top: '0.65rem',
-                    right: '0.65rem',
                     width: '18px',
                     height: '18px',
                     borderRadius: '50%',
-                    backgroundColor: 'var(--cyan-500)',
-                    color: '#000',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <Check size={12} strokeWidth={3} />
-                </div>
-              )}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                <div
-                  style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    background: isSelected ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255, 255, 255, 0.06)',
+                    border: isSelected ? '2px solid var(--accent-primary)' : '2px solid var(--border-default)',
+                    backgroundColor: isSelected ? 'var(--accent-primary)' : 'transparent',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: isSelected ? 'var(--cyan-400)' : 'var(--text-secondary)'
+                    color: '#FFFFFF',
+                    flexShrink: 0
                   }}
                 >
-                  <Mic size={14} />
+                  {isSelected && <Check size={11} strokeWidth={3} />}
                 </div>
+
                 <div>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>
-                    {voice.name}
-                  </h4>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                    {voice.accent} • {voice.gender}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {voice.name}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.7rem',
+                        color: 'var(--text-muted)',
+                        backgroundColor: 'var(--bg-surface-muted)',
+                        padding: '0.1rem 0.4rem',
+                        borderRadius: 'var(--radius-xs)'
+                      }}
+                    >
+                      {voice.accent} • {voice.gender}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, marginTop: '0.15rem' }}>
+                    {voice.tone}
+                  </p>
                 </div>
               </div>
 
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', minHeight: '32px' }}>
-                {voice.tone}
-              </p>
-
+              {/* Right: Audio preview button */}
               <button
                 type="button"
                 onClick={(e) => handlePlaySample(e, voice)}
+                disabled={!isSpeechAvailable}
+                title={isSpeechAvailable ? 'Preview voice audio sample' : 'Audio preview not supported in this browser'}
                 style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.4rem',
-                  padding: '0.35rem 0.6rem',
-                  borderRadius: 'var(--radius-sm)',
-                  backgroundColor: isPlaying ? 'rgba(6, 182, 212, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                  border: isPlaying ? '1px solid var(--cyan-400)' : '1px solid var(--border-hairline)',
-                  color: isPlaying ? 'var(--cyan-300)' : 'var(--text-secondary)',
+                  background: isPlaying ? 'var(--accent-primary)' : 'var(--bg-surface)',
+                  border: isPlaying ? '1px solid var(--accent-primary)' : '1px solid var(--border-default)',
+                  color: isPlaying ? '#FFFFFF' : 'var(--text-secondary)',
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: 'var(--radius-xs)',
                   fontSize: '0.75rem',
                   fontWeight: 500,
-                  cursor: 'pointer',
+                  cursor: isSpeechAvailable ? 'pointer' : 'not-allowed',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
                   transition: 'all var(--transition-fast)'
                 }}
               >
                 {isPlaying ? (
                   <>
                     <VolumeX size={13} />
-                    <span>Stop Preview</span>
+                    <span>Stop</span>
                   </>
                 ) : (
                   <>
                     <Volume2 size={13} />
-                    <span>Preview Voice</span>
+                    <span>Sample Voice</span>
                   </>
                 )}
               </button>

@@ -1,7 +1,16 @@
 // ==========================================================================
 // VaaniFlow AI — Typed API Service Contract
 // ==========================================================================
-import type { Agent, BusinessTemplate, DashboardMetrics, Session, VoiceOption } from '../types/agent';
+import type {
+  Agent,
+  BusinessTemplate,
+  DashboardMetrics,
+  GenerateAgentPromptInput,
+  GeneratedAgentConfig,
+  RefineAgentPromptInput,
+  Session,
+  VoiceOption
+} from '../types/agent';
 
 export interface CreateAgentInput {
   name: string;
@@ -14,6 +23,15 @@ export interface CreateAgentInput {
   transferPhone?: string;
   businessHours?: string;
   businessAddress?: string;
+  description?: string;
+  persona?: string;
+  goals?: string[];
+  guardrails?: string[];
+  conversationSteps?: string[];
+  requiredInformation?: string[];
+  escalationTriggers?: string[];
+  fallbackMessage?: string;
+  generatedFromPrompt?: string;
 }
 
 export interface UpdateAgentInput extends Partial<CreateAgentInput> {
@@ -33,4 +51,8 @@ export interface AgentApiClient {
   getSessions(limit?: number): Promise<Session[]>;
   getVoices(): Promise<VoiceOption[]>;
   getBusinessTemplates(): Promise<BusinessTemplate[]>;
+
+  // Prompt-First Generation & Natural Language Refinement
+  generateFromPrompt(input: GenerateAgentPromptInput): Promise<GeneratedAgentConfig>;
+  refineConfiguration(input: RefineAgentPromptInput): Promise<GeneratedAgentConfig>;
 }

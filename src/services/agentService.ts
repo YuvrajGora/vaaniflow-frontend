@@ -78,6 +78,20 @@ class HttpAgentApiClient implements AgentApiClient {
   getBusinessTemplates(): Promise<BusinessTemplate[]> {
     return this.request<BusinessTemplate[]>('/templates');
   }
+
+  generateFromPrompt(input: import('../types/agent').GenerateAgentPromptInput): Promise<import('../types/agent').GeneratedAgentConfig> {
+    return this.request<import('../types/agent').GeneratedAgentConfig>('/agents/generate-from-prompt', {
+      method: 'POST',
+      body: JSON.stringify(input)
+    });
+  }
+
+  refineConfiguration(input: import('../types/agent').RefineAgentPromptInput): Promise<import('../types/agent').GeneratedAgentConfig> {
+    return this.request<import('../types/agent').GeneratedAgentConfig>('/agents/refine-configuration', {
+      method: 'POST',
+      body: JSON.stringify(input)
+    });
+  }
 }
 
 // Instantiate the active client

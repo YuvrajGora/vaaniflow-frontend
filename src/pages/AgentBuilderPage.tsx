@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Save, ArrowLeft, Check, MessageSquare, AlertCircle } from 'lucide-react';
+import { Save, ArrowLeft, Check, AlertCircle } from 'lucide-react';
 import { agentService } from '../services/agentService';
-import type { BusinessCategory, BusinessTemplate, VoiceOption } from '../types/agent';
+import type { BusinessCategory, BusinessTemplate, VoiceOption, GeneratedAgentConfig } from '../types/agent';
+import { PromptInputHero } from '../components/builder/PromptInputHero';
+import { PromptRefinementBar } from '../components/builder/PromptRefinementBar';
+import { StructuredConfigEditor, type StructuredConfigFormState } from '../components/builder/StructuredConfigEditor';
 import { BusinessTypeSelector } from '../components/builder/BusinessTypeSelector';
-import { VoiceSelector } from '../components/builder/VoiceSelector';
 import { LivePreviewCard } from '../components/builder/LivePreviewCard';
 import { Button } from '../components/common/Button';
-import { Card } from '../components/common/Card';
+
+const DEFAULT_PROMPT =
+  'Create a friendly receptionist for my dental clinic who speaks Hindi and English, answers common appointment questions, collects appointment preferences, and escalates emergencies to a human.';
 
 export const AgentBuilderPage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,36 +22,79 @@ export const AgentBuilderPage: React.FC = () => {
   const [templates, setTemplates] = useState<BusinessTemplate[]>([]);
   const [voices, setVoices] = useState<VoiceOption[]>([]);
   const [loadingInitial, setLoadingInitial] = useState(true);
+
+  // Prompt-First State
+  const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isRefining, setIsRefining] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+
+  // Form Configuration State
+  const [config, setConfig] = useState<StructuredConfigFormState>({
+    name: 'Maya — Dental Receptionist',
+    description: 'Bilingual AI receptionist for dental care appointments and emergency triage.',
+    businessName: 'Apex Family Dental Care',
+    businessType: 'dental',
+    persona: 'Warm, empathetic, and professional front-desk coordinator who balances patient reassurance with efficient scheduling.',
+    goals: [
+      'Warmly greet callers in Hindi or English based on their preference',
+      'Answer questions about dental hygiene, hours, and accepted insurance',
+      'Collect appointment preferences (preferred day, time window, reason for visit)',
+      'Identify acute dental pain or emergencies and escalate immediately to on-call dentist'
+    ],
+    firstMessage:
+      'नमस्ते! (Namaste!) Welcome to Apex Family Dental Care. I am Maya, your receptionist. Are you calling to book an appointment or ask about our services?',
+    instructions: `You are Maya, the bilingual voice AI receptionist for Apex Family Dental Care.
+Business Address: 402 Elmwood Parkway, Suite 100
+Languages: Hindi & English (seamless code-switching based on caller language).
+Hours: Monday-Friday 8am-5:30pm, Saturday 9am-1pm.
+Triage: Collect caller name, phone number, and reason for visit. Express gentle empathy if pain is mentioned.`,
+    guardrails: [
+      'Never provide clinical diagnosis or prescribe treatments over the phone.',
+      'Always verify caller mobile phone and full name before confirming appointment.',
+      'Keep voice responses concise (1 to 3 sentences) for natural turn-taking.',
+      'If caller reports acute trauma or severe bleeding, escalate immediately.'
+    ],
+    language: 'hi-IN',
+    voiceId: 'rachel',
+    conversationSteps: [
+      '1. Greeting & Identity: Warm opening in Hindi/English, introduce dental clinic.',
+      '2. Intent Triage: Ascertain if caller needs hygiene cleaning, urgent treatment, or inquiry.',
+      '3. Information Gathering: Collect caller full name, contact number, and scheduling preferences.',
+      '4. Confirmation & Summary: Repeat booking details and notify them of SMS confirmation.',
+      '5. Wrap-up or Escalation: Transfer emergency callers or conclude warmly.'
+    ],
+    requiredInformation: [
+      'Caller Full Name',
+      'Mobile Phone Number',
+      'Preferred Appointment Date & Time',
+      'Reason for Visit / Symptoms'
+    ],
+    escalationTriggers: [
+      'Caller reports acute toothache, trauma, or severe bleeding',
+      'Caller explicitly asks to speak with Dr. Chen or a human receptionist',
+      'Billing dispute or insurance claim verification'
+    ],
+    transferPhone: '+1 (555) 234-8901',
+    fallbackMessage:
+      'I want to make sure your situation is handled promptly. Please hold while I connect you directly with our on-call dental coordinator.',
+    businessHours: 'Mon-Fri 8:00 AM - 5:30 PM, Sat 9:00 AM - 1:00 PM',
+    businessAddress: '402 Elmwood Parkway, Suite 100'
+  });
+
+  const [sampleQueries, setSampleQueries] = useState<string[]>([
+    'Do you accept Delta Dental insurance?',
+    'I have a chipped molar and severe pain, can I get in today?',
+    'Can I reschedule my hygiene cleaning next Tuesday?'
+  ]);
+
+  // Action feedback
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Form State
-  const [businessType, setBusinessType] = useState<BusinessCategory>('dental');
-  const [businessName, setBusinessName] = useState('Apex Family Dental Care');
-  const [agentName, setAgentName] = useState('Maya — Front Desk Coordinator');
-  const [voiceId, setVoiceId] = useState('rachel');
-  const [language, setLanguage] = useState('en-US');
-  const [firstMessage, setFirstMessage] = useState(
-    'Hello! Thank you for calling Apex Family Dental Care. I am Maya, your receptionist. Are you calling to schedule an appointment or ask about our services?'
-  );
-  const [instructions, setInstructions] = useState('');
-  const [transferPhone, setTransferPhone] = useState('+1 (555) 234-8901');
-  const [businessHours, setBusinessHours] = useState('Mon-Fri 8:00 AM - 5:30 PM, Sat 9:00 AM - 1:00 PM');
-  const [businessAddress, setBusinessAddress] = useState('402 Elmwood Parkway, Suite 100');
-  const [status, setStatus] = useState<'active' | 'draft'>('active');
-  const [sampleQueries, setSampleQueries] = useState<string[]>([]);
-
-  const applyTemplate = (tpl: BusinessTemplate) => {
-    setBusinessType(tpl.id);
-    setAgentName(tpl.defaultAgentName);
-    setVoiceId(tpl.recommendedVoiceId);
-    setFirstMessage(tpl.defaultGreeting);
-    setInstructions(tpl.defaultInstructions);
-    setSampleQueries(tpl.sampleCallerQueries);
-  };
-
-  // Load Templates & Voices
+  // Load Initial Data or existing agent
   useEffect(() => {
     let isMounted = true;
     const init = async () => {
@@ -60,32 +107,45 @@ export const AgentBuilderPage: React.FC = () => {
         setTemplates(fetchedTemplates);
         setVoices(fetchedVoices);
 
-        // If editing an existing agent, prefill form
         if (editAgentId) {
           const existing = await agentService.getAgentById(editAgentId);
           if (existing && isMounted) {
-            setBusinessType(existing.businessType);
-            setBusinessName(existing.businessName);
-            setAgentName(existing.name);
-            setVoiceId(existing.voiceId);
-            setLanguage(existing.language);
-            setFirstMessage(existing.firstMessage);
-            setInstructions(existing.instructions);
-            setTransferPhone(existing.transferPhone || '');
-            setBusinessHours(existing.businessHours || '');
-            setBusinessAddress(existing.businessAddress || '');
-            setStatus(existing.status === 'draft' ? 'draft' : 'active');
-            
-            const matchedTpl = fetchedTemplates.find(t => t.id === existing.businessType);
+            setConfig({
+              name: existing.name,
+              description: existing.description || `${existing.name} configured for ${existing.businessName}`,
+              businessName: existing.businessName,
+              businessType: existing.businessType,
+              persona: existing.persona || 'Professional and polite customer receptionist.',
+              goals: existing.goals || ['Greet callers', 'Collect booking info', 'Escalate complex questions'],
+              firstMessage: existing.firstMessage,
+              instructions: existing.instructions,
+              guardrails: existing.guardrails || ['Keep responses concise and respectful.'],
+              language: existing.language,
+              voiceId: existing.voiceId,
+              conversationSteps: existing.conversationSteps || [
+                '1. Greeting',
+                '2. Inquiry Triage',
+                '3. Collect Information',
+                '4. Confirmation',
+                '5. Conclusion'
+              ],
+              requiredInformation: existing.requiredInformation || ['Caller Name', 'Contact Phone'],
+              escalationTriggers: existing.escalationTriggers || ['Caller demands human staff'],
+              transferPhone: existing.transferPhone || '+1 (555) 234-8901',
+              fallbackMessage: existing.fallbackMessage || 'Connecting you with human staff...',
+              businessHours: existing.businessHours || 'Mon-Fri 9am-5pm',
+              businessAddress: existing.businessAddress || '100 Main St'
+            });
+
+            if (existing.generatedFromPrompt) {
+              setPrompt(existing.generatedFromPrompt);
+            }
+            setHasGenerated(true);
+
+            const matchedTpl = fetchedTemplates.find((t) => t.id === existing.businessType);
             if (matchedTpl) {
               setSampleQueries(matchedTpl.sampleCallerQueries);
             }
-          }
-        } else {
-          // Default to dental template
-          const defaultTpl = fetchedTemplates.find(t => t.id === 'dental') || fetchedTemplates[0];
-          if (defaultTpl && isMounted) {
-            applyTemplate(defaultTpl);
           }
         }
       } catch (err: any) {
@@ -105,19 +165,119 @@ export const AgentBuilderPage: React.FC = () => {
     };
   }, [editAgentId]);
 
-  const insertPromptSnippet = (snippetType: 'emergency' | 'hours' | 'booking') => {
-    let snippet = '';
-    if (snippetType === 'emergency') {
-      snippet = `\n\nEMERGENCY ESCALATION:\nIf the caller reports an acute medical/safety emergency or uncontrolled situation, express reassurance, request their callback number, and transfer the call immediately to ${transferPhone || 'the emergency on-call line'}.`;
-    } else if (snippetType === 'hours') {
-      snippet = `\n\nHOURS & LOCATION:\nWe are located at ${businessAddress || 'our main business office'}.\nBusiness Hours: ${businessHours || 'Monday through Friday from 9:00 AM to 5:00 PM'}.`;
-    } else if (snippetType === 'booking') {
-      snippet = `\n\nAPPOINTMENT BOOKING WORKFLOW:\n1. Ask for caller's full name and mobile phone number.\n2. Ask their preferred day of the week and morning/afternoon preference.\n3. Note the primary reason for their visit.\n4. Confirm the booking details before ending the call.`;
-    }
+  // TASK 1 & 2: Prompt-First Generation Handler
+  const handleGenerateFromPrompt = async () => {
+    if (!prompt.trim() || isGenerating) return;
+    setIsGenerating(true);
+    setErrorMessage(null);
 
-    setInstructions((prev) => prev.trim() + snippet);
+    try {
+      const generated: GeneratedAgentConfig = await agentService.generateFromPrompt({
+        prompt: prompt.trim()
+      });
+
+      setConfig({
+        name: generated.name,
+        description: generated.description,
+        businessName: generated.businessName,
+        businessType: generated.businessType,
+        persona: generated.persona,
+        goals: generated.goals,
+        firstMessage: generated.firstMessage,
+        instructions: generated.instructions,
+        guardrails: generated.guardrails,
+        language: generated.language,
+        voiceId: generated.suggestedVoiceId,
+        conversationSteps: generated.conversationSteps,
+        requiredInformation: generated.requiredInformation,
+        escalationTriggers: generated.escalationRules.triggers,
+        transferPhone: generated.escalationRules.transferPhone || '+1 (555) 234-8901',
+        fallbackMessage: generated.escalationRules.fallbackMessage,
+        businessHours: 'Mon-Fri 8:00 AM - 5:30 PM, Sat 9:00 AM - 1:00 PM',
+        businessAddress: '402 Elmwood Parkway, Suite 100'
+      });
+
+      if (generated.sampleQueries && generated.sampleQueries.length > 0) {
+        setSampleQueries(generated.sampleQueries);
+      }
+
+      setHasGenerated(true);
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Failed to generate agent configuration from prompt.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
+  // TASK 3: Refine Configuration with Natural Language
+  const handleRefine = async (refinementText: string) => {
+    setIsRefining(true);
+    setErrorMessage(null);
+
+    try {
+      const currentConfigPayload: GeneratedAgentConfig = {
+        name: config.name,
+        description: config.description,
+        businessName: config.businessName,
+        businessType: config.businessType as BusinessCategory,
+        persona: config.persona,
+        goals: config.goals,
+        firstMessage: config.firstMessage,
+        instructions: config.instructions,
+        guardrails: config.guardrails,
+        language: config.language,
+        suggestedVoiceId: config.voiceId,
+        conversationSteps: config.conversationSteps,
+        requiredInformation: config.requiredInformation,
+        escalationRules: {
+          triggers: config.escalationTriggers,
+          transferPhone: config.transferPhone,
+          fallbackMessage: config.fallbackMessage
+        },
+        sampleQueries,
+        generatedFromPrompt: prompt,
+        isMockGeneration: true
+      };
+
+      const refined = await agentService.refineConfiguration({
+        currentConfig: currentConfigPayload,
+        refinementPrompt: refinementText
+      });
+
+      setConfig((prev) => ({
+        ...prev,
+        firstMessage: refined.firstMessage,
+        language: refined.language,
+        instructions: refined.instructions,
+        goals: refined.goals,
+        guardrails: refined.guardrails,
+        conversationSteps: refined.conversationSteps,
+        requiredInformation: refined.requiredInformation,
+        escalationTriggers: refined.escalationRules.triggers
+      }));
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Failed to refine configuration.');
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
+  // Optional: Apply Industry Template
+  const handleSelectTemplate = (tpl: BusinessTemplate) => {
+    setConfig((prev) => ({
+      ...prev,
+      businessType: tpl.id,
+      name: tpl.defaultAgentName,
+      voiceId: tpl.recommendedVoiceId,
+      firstMessage: tpl.defaultGreeting,
+      instructions: tpl.defaultInstructions
+    }));
+    setSampleQueries(tpl.sampleCallerQueries);
+    setPrompt(`Create a professional receptionist for ${tpl.label} that handles common caller inquiries, appointment bookings, and emergency triage.`);
+    setHasGenerated(true);
+  };
+
+  // Save Agent to Service
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -125,17 +285,26 @@ export const AgentBuilderPage: React.FC = () => {
 
     try {
       const payload = {
-        name: agentName,
-        businessName,
-        businessType,
-        language,
-        voiceId,
-        firstMessage,
-        instructions,
-        transferPhone,
-        businessHours,
-        businessAddress,
-        status
+        name: config.name,
+        businessName: config.businessName,
+        businessType: config.businessType as BusinessCategory,
+        language: config.language,
+        voiceId: config.voiceId,
+        firstMessage: config.firstMessage,
+        instructions: config.instructions,
+        transferPhone: config.transferPhone,
+        businessHours: config.businessHours,
+        businessAddress: config.businessAddress,
+        description: config.description,
+        persona: config.persona,
+        goals: config.goals,
+        guardrails: config.guardrails,
+        conversationSteps: config.conversationSteps,
+        requiredInformation: config.requiredInformation,
+        escalationTriggers: config.escalationTriggers,
+        fallbackMessage: config.fallbackMessage,
+        generatedFromPrompt: prompt,
+        status: 'active' as const
       };
 
       if (editAgentId) {
@@ -154,7 +323,7 @@ export const AgentBuilderPage: React.FC = () => {
     }
   };
 
-  const currentVoice = voices.find((v) => v.id === voiceId);
+  const currentVoice = voices.find((v) => v.id === config.voiceId);
 
   if (loadingInitial) {
     return (
@@ -177,8 +346,8 @@ export const AgentBuilderPage: React.FC = () => {
 
   return (
     <div className="vf-container">
-      {/* Header Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+      {/* Top Header Bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <button
             onClick={() => navigate('/')}
@@ -200,18 +369,15 @@ export const AgentBuilderPage: React.FC = () => {
           </button>
 
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700 }}>
-            {editAgentId ? 'Configure AI Receptionist' : 'Build New AI Receptionist'}
+            {editAgentId ? 'Configure AI Receptionist' : 'Prompt-First Agent Builder'}
           </h1>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            Tailor speech tone, knowledge base, and call escalation rules for your small business.
+            Start with plain language to synthesize an intelligent, structured voice AI receptionist.
           </p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-          >
+          <Button variant="ghost" onClick={() => navigate('/')}>
             Cancel
           </Button>
 
@@ -245,220 +411,80 @@ export const AgentBuilderPage: React.FC = () => {
         </div>
       )}
 
+      {/* TASK 1: Prominent Prompt-First Hero Card */}
+      <PromptInputHero
+        prompt={prompt}
+        onChangePrompt={setPrompt}
+        onGenerate={handleGenerateFromPrompt}
+        loading={isGenerating}
+        showTemplatesToggle={true}
+        showingTemplates={showTemplates}
+        onToggleTemplates={() => setShowTemplates((prev) => !prev)}
+      />
+
+      {/* Optional Industry Template Presets (Task 4: Preserved feature) */}
+      {showTemplates && (
+        <div
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '1.5rem',
+            marginBottom: '2rem'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Optional Industry Starting Templates</h3>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              Selecting a card fills prompt & initial instructions
+            </span>
+          </div>
+          <BusinessTypeSelector
+            templates={templates}
+            selectedCategory={config.businessType as BusinessCategory}
+            onSelect={handleSelectTemplate}
+          />
+        </div>
+      )}
+
       {/* Main Two-Column Layout */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)',
+          gridTemplateColumns: 'minmax(0, 1.75fr) minmax(320px, 1fr)',
           gap: '2rem',
           alignItems: 'start'
         }}
       >
-        {/* Left Column: Form Controls */}
+        {/* Left Column: Refinement Bar & Structured Config Editor */}
         <div>
-          <Card style={{ marginBottom: '1.5rem' }}>
-            {/* 1. Category Selector */}
-            <BusinessTypeSelector
-              templates={templates}
-              selectedCategory={businessType}
-              onSelect={applyTemplate}
-            />
+          {/* TASK 3: Natural Language Refinement Input */}
+          <PromptRefinementBar onRefine={handleRefine} loading={isRefining} />
 
-            {/* 2. Business & Agent Identity */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
-              <div className="vf-form-group" style={{ margin: 0 }}>
-                <label className="vf-label">
-                  <span>Business Name</span>
-                </label>
-                <input
-                  type="text"
-                  className="vf-input"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="e.g. Apex Family Dental Care"
-                  required
-                />
-              </div>
-
-              <div className="vf-form-group" style={{ margin: 0 }}>
-                <label className="vf-label">
-                  <span>Receptionist Persona Name</span>
-                </label>
-                <input
-                  type="text"
-                  className="vf-input"
-                  value={agentName}
-                  onChange={(e) => setAgentName(e.target.value)}
-                  placeholder="e.g. Maya — Front Desk Coordinator"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* 3. Voice Selector */}
-            <VoiceSelector
-              voices={voices}
-              selectedVoiceId={voiceId}
-              onSelectVoice={(v) => setVoiceId(v.id)}
-            />
-
-            {/* 4. Language Selection */}
-            <div className="vf-form-group">
-              <label className="vf-label">
-                <span>Spoken Language & Accent</span>
-              </label>
-              <select
-                className="vf-select"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-              >
-                <option value="en-US">English (United States)</option>
-                <option value="en-GB">English (United Kingdom)</option>
-                <option value="es-ES">Spanish (Español)</option>
-                <option value="hi-IN">Hindi / Hinglish (India)</option>
-                <option value="fr-FR">French (Français)</option>
-              </select>
-            </div>
-          </Card>
-
-          {/* Opening Greeting & Behavior */}
-          <Card style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <MessageSquare size={18} style={{ color: 'var(--cyan-400)' }} />
-              <span>Receptionist Dialogue & Instructions</span>
-            </h3>
-
-            {/* First Message Greeting */}
-            <div className="vf-form-group">
-              <label className="vf-label">
-                <span>Opening Phone Greeting</span>
-                <span className="vf-hint">Exact words spoken upon caller connection</span>
-              </label>
-              <textarea
-                className="vf-textarea"
-                rows={3}
-                value={firstMessage}
-                onChange={(e) => setFirstMessage(e.target.value)}
-                placeholder="Hello! Thank you for calling..."
-                required
-              />
-            </div>
-
-            {/* Core Prompt / Instructions */}
-            <div className="vf-form-group">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                <label className="vf-label" style={{ margin: 0 }}>
-                  <span>System Knowledge & Instructions</span>
-                </label>
-
-                {/* Snippet insertion pills */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Insert snippet:</span>
-                  <button
-                    type="button"
-                    onClick={() => insertPromptSnippet('booking')}
-                    style={{
-                      background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid var(--border-hairline)',
-                      color: 'var(--cyan-300)',
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '0.15rem 0.45rem',
-                      fontSize: '0.72rem',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    + Booking
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertPromptSnippet('emergency')}
-                    style={{
-                      background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid var(--border-hairline)',
-                      color: 'var(--amber-400)',
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '0.15rem 0.45rem',
-                      fontSize: '0.72rem',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    + Emergency
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertPromptSnippet('hours')}
-                    style={{
-                      background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid var(--border-hairline)',
-                      color: 'var(--text-secondary)',
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '0.15rem 0.45rem',
-                      fontSize: '0.72rem',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    + Hours
-                  </button>
-                </div>
-              </div>
-
-              <textarea
-                className="vf-textarea"
-                rows={9}
-                style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                placeholder="Enter prompt instructions for the voice agent..."
-                required
-              />
-              <span className="vf-hint">
-                Provide business hours, pricing estimates, emergency policies, and appointment triage procedures.
-              </span>
-            </div>
-
-            {/* Human Transfer Phone & Address */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="vf-form-group" style={{ margin: 0 }}>
-                <label className="vf-label">
-                  <span>Human Escalation Phone</span>
-                  <span className="vf-hint">Emergency transfer</span>
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type="tel"
-                    className="vf-input"
-                    value={transferPhone}
-                    onChange={(e) => setTransferPhone(e.target.value)}
-                    placeholder="+1 (555) 000-0000"
-                  />
-                </div>
-              </div>
-
-              <div className="vf-form-group" style={{ margin: 0 }}>
-                <label className="vf-label">
-                  <span>Business Hours</span>
-                </label>
-                <input
-                  type="text"
-                  className="vf-input"
-                  value={businessHours}
-                  onChange={(e) => setBusinessHours(e.target.value)}
-                  placeholder="Mon-Fri 8am - 5pm"
-                />
-              </div>
-            </div>
-          </Card>
+          {/* TASK 2: Structured Configuration Editor */}
+          <StructuredConfigEditor
+            config={config}
+            onChange={setConfig}
+            voices={voices}
+            originalPrompt={prompt}
+            isMockGenerated={true}
+          />
         </div>
 
         {/* Right Column: Sticky Live Preview */}
         <div>
           <LivePreviewCard
-            businessName={businessName}
-            agentName={agentName}
+            businessName={config.businessName}
+            agentName={config.name}
             voiceName={currentVoice?.name || 'Rachel'}
-            firstMessage={firstMessage}
+            firstMessage={config.firstMessage}
             sampleQueries={sampleQueries}
-            status={status}
+            status="active"
+            language={config.language}
+            persona={config.persona}
+            requiredFields={config.requiredInformation}
+            escalationPhone={config.transferPhone}
+            isAiGenerated={hasGenerated}
           />
         </div>
       </div>

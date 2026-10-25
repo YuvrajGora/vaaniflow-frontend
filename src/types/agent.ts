@@ -42,6 +42,42 @@ export interface AgentStats {
   lastActive: string;
 }
 
+export interface EscalationConfig {
+  triggers: string[];
+  transferPhone?: string;
+  fallbackMessage: string;
+}
+
+export interface GeneratedAgentConfig {
+  name: string;
+  description: string;
+  businessName: string;
+  businessType: BusinessCategory;
+  persona: string;
+  goals: string[];
+  firstMessage: string;
+  instructions: string;
+  guardrails: string[];
+  language: string;
+  suggestedVoiceId: string;
+  conversationSteps: string[];
+  requiredInformation: string[];
+  escalationRules: EscalationConfig;
+  sampleQueries?: string[];
+  generatedFromPrompt?: string;
+  isMockGeneration: boolean;
+}
+
+export interface GenerateAgentPromptInput {
+  prompt: string;
+  category?: BusinessCategory;
+}
+
+export interface RefineAgentPromptInput {
+  currentConfig: GeneratedAgentConfig;
+  refinementPrompt: string;
+}
+
 export interface Agent {
   id: string;
   name: string;
@@ -55,6 +91,16 @@ export interface Agent {
   transferPhone?: string;
   businessHours?: string;
   businessAddress?: string;
+  // Extended structured fields from prompt generation
+  description?: string;
+  persona?: string;
+  goals?: string[];
+  guardrails?: string[];
+  conversationSteps?: string[];
+  requiredInformation?: string[];
+  escalationTriggers?: string[];
+  fallbackMessage?: string;
+  generatedFromPrompt?: string;
   stats: AgentStats;
   createdAt: string;
   updatedAt: string;

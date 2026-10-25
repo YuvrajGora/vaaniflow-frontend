@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle, RefreshCw, Bot, AlertCircle } from 'lucide-react';
+import { Plus, RefreshCw, Bot, AlertCircle } from 'lucide-react';
 import { agentService } from '../services/agentService';
 import type { Agent, DashboardMetrics, Session } from '../types/agent';
 import { QuickStats } from '../components/dashboard/QuickStats';
@@ -30,7 +30,7 @@ export const DashboardPage: React.FC = () => {
       setAgents(fetchedAgents);
       setSessions(fetchedSessions);
     } catch (err: any) {
-      setError(err?.message || 'Failed to load dashboard data.');
+      setError(err?.message || 'Failed to refresh dashboard data.');
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ export const DashboardPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="vf-container">
+    <div className="vf-container" style={{ paddingBottom: '3.5rem' }}>
       {/* Top Welcome & Setup Guidance */}
       <SetupChecklist />
 
@@ -75,21 +75,30 @@ export const DashboardPage: React.FC = () => {
 
       {/* Agents Section */}
       <div style={{ marginBottom: '2.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            marginBottom: '1.25rem'
+          }}
+        >
           <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-              AI Receptionists ({agents.length})
+            <h2 style={{ fontSize: '1.55rem', fontFamily: 'var(--font-display)', fontWeight: 500, color: 'var(--text-primary)' }}>
+              Configured Receptionists ({agents.length})
             </h2>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-              Configured voice agents answering customer calls for your businesses
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              Inbound voice agents handling caller inquiries and appointments for your businesses
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <Button
               variant="ghost"
               size="sm"
-              icon={<RefreshCw size={14} />}
+              icon={<RefreshCw size={13} />}
               onClick={handleManualRefresh}
               disabled={loading}
             >
@@ -98,7 +107,7 @@ export const DashboardPage: React.FC = () => {
             <Button
               variant="primary"
               size="sm"
-              icon={<PlusCircle size={15} />}
+              icon={<Plus size={14} />}
               onClick={() => navigate('/builder')}
             >
               Create Receptionist
@@ -111,33 +120,33 @@ export const DashboardPage: React.FC = () => {
             style={{
               padding: '3rem',
               textAlign: 'center',
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-lg)',
+              backgroundColor: 'var(--bg-surface-warm)',
+              borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border-default)',
               color: 'var(--text-secondary)'
             }}
           >
             <div
               style={{
-                width: '32px',
-                height: '32px',
-                border: '3px solid var(--cyan-500)',
+                width: '30px',
+                height: '30px',
+                border: '3px solid var(--accent-primary)',
                 borderTopColor: 'transparent',
                 borderRadius: '50%',
                 margin: '0 auto 1rem',
                 animation: 'vf-spin 0.8s linear infinite'
               }}
             />
-            <p style={{ fontSize: '0.9rem' }}>Loading configured voice receptionists...</p>
+            <p style={{ fontSize: '0.875rem' }}>Loading configured voice receptionists...</p>
           </div>
         ) : error ? (
           <div
             style={{
-              padding: '2rem',
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: 'var(--radius-lg)',
-              color: 'var(--rose-400)',
+              padding: '1.5rem',
+              backgroundColor: 'var(--status-danger-bg)',
+              border: '1px solid var(--status-danger-border)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--status-danger)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.75rem'
@@ -145,40 +154,43 @@ export const DashboardPage: React.FC = () => {
           >
             <AlertCircle size={20} />
             <div>
-              <h4 style={{ fontWeight: 600 }}>Error connecting to receptionist service</h4>
-              <p style={{ fontSize: '0.85rem' }}>{error}</p>
+              <h4 style={{ fontWeight: 600, fontSize: '0.9rem' }}>Error connecting to receptionist service</h4>
+              <p style={{ fontSize: '0.825rem', marginTop: '0.15rem' }}>{error}</p>
             </div>
           </div>
         ) : agents.length === 0 ? (
           <div
             style={{
-              padding: '3rem 2rem',
+              padding: '3.5rem 2rem',
               textAlign: 'center',
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-lg)',
+              backgroundColor: 'var(--bg-surface-warm)',
+              borderRadius: 'var(--radius-md)',
               border: '1px dashed var(--border-default)'
             }}
           >
             <div
               style={{
-                width: '48px',
-                height: '48px',
+                width: '46px',
+                height: '46px',
                 borderRadius: '50%',
-                background: 'var(--cyan-subtle)',
-                color: 'var(--cyan-400)',
+                background: 'var(--accent-subtle)',
+                color: 'var(--accent-primary)',
+                border: '1px solid var(--accent-border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1rem'
               }}
             >
-              <Bot size={24} />
+              <Bot size={22} />
             </div>
-            <h3 style={{ fontSize: '1.1rem', marginBottom: '0.35rem' }}>No AI receptionists found</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-              Create your first voice receptionist in under 2 minutes using an industry template.
+            <h3 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-display)', marginBottom: '0.35rem' }}>
+              No AI receptionists found
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '420px', margin: '0 auto 1.25rem' }}>
+              Create your first voice receptionist in under 2 minutes using a plain-language prompt or industry template.
             </p>
-            <Button icon={<PlusCircle size={15} />} onClick={() => navigate('/builder')}>
+            <Button icon={<Plus size={14} />} onClick={() => navigate('/builder')}>
               Build Your First Receptionist
             </Button>
           </div>

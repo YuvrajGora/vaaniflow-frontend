@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Mic,
   Sliders,
-  Play,
+  Phone,
   Building,
   Wrench,
   Stethoscope,
@@ -24,26 +24,26 @@ interface AgentCardProps {
 const getCategoryIcon = (category: BusinessCategory) => {
   switch (category) {
     case 'dental':
-      return <Stethoscope size={16} />;
+      return <Stethoscope size={14} />;
     case 'auto_repair':
-      return <Wrench size={16} />;
+      return <Wrench size={14} />;
     case 'real_estate':
-      return <Building size={16} />;
+      return <Building size={14} />;
     case 'law_firm':
-      return <Scale size={16} />;
+      return <Scale size={14} />;
     case 'salon_spa':
-      return <Sparkles size={16} />;
+      return <Sparkles size={14} />;
     case 'restaurant':
-      return <Utensils size={16} />;
+      return <Utensils size={14} />;
     default:
-      return <Bot size={16} />;
+      return <Bot size={14} />;
   }
 };
 
 const formatCategoryName = (category: BusinessCategory) => {
   switch (category) {
     case 'dental':
-      return 'Dental & Medical';
+      return 'Dental & Clinic';
     case 'auto_repair':
       return 'Auto Repair';
     case 'real_estate':
@@ -71,22 +71,44 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
   };
 
   return (
-    <Card interactive style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Card
+      interactive
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        backgroundColor: 'var(--bg-surface-warm)',
+        padding: '1.5rem',
+        border: '1px solid var(--border-default)',
+        borderRadius: 'var(--radius-md)'
+      }}
+    >
       {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: '0.75rem',
+          marginBottom: '0.85rem'
+        }}
+      >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.35rem' }}>
             <span
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.35rem',
-                fontSize: '0.75rem',
-                color: 'var(--cyan-400)',
-                background: 'var(--cyan-subtle)',
-                padding: '0.2rem 0.5rem',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--cyan-border)'
+                gap: '0.3rem',
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                color: 'var(--accent-primary)',
+                background: 'var(--accent-subtle)',
+                padding: '0.15rem 0.45rem',
+                borderRadius: 'var(--radius-xs)',
+                border: '1px solid var(--accent-border)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.03em'
               }}
             >
               {getCategoryIcon(agent.businessType)}
@@ -102,10 +124,18 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
             )}
           </div>
 
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+          <h3
+            style={{
+              fontSize: '1.2rem',
+              fontWeight: 600,
+              fontFamily: 'var(--font-display)',
+              color: 'var(--text-primary)',
+              lineHeight: 1.25
+            }}
+          >
             {agent.name}
           </h3>
-          <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
             {agent.businessName}
           </p>
         </div>
@@ -117,28 +147,29 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
             alignItems: 'center',
             gap: '0.35rem',
             padding: '0.25rem 0.55rem',
-            borderRadius: 'var(--radius-full)',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid var(--border-hairline)',
-            fontSize: '0.75rem',
+            borderRadius: 'var(--radius-xs)',
+            background: 'var(--bg-surface-raised)',
+            border: '1px solid var(--border-default)',
+            fontSize: '0.72rem',
             color: 'var(--text-secondary)'
           }}
-          title="ElevenLabs Curated Voice"
+          title="Configured Voice"
         >
-          <Mic size={13} style={{ color: 'var(--cyan-400)' }} />
-          <span style={{ textTransform: 'capitalize' }}>{agent.voiceId}</span>
+          <Mic size={12} style={{ color: 'var(--accent-primary)' }} />
+          <span style={{ textTransform: 'capitalize', fontWeight: 500 }}>{agent.voiceId}</span>
         </div>
       </div>
 
       {/* Greeting Preview */}
       <div
         style={{
-          background: 'rgba(0, 0, 0, 0.25)',
-          padding: '0.75rem 0.9rem',
-          borderRadius: 'var(--radius-md)',
+          background: 'var(--bg-surface-raised)',
+          padding: '0.75rem 0.95rem',
+          borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--border-hairline)',
-          fontSize: '0.8rem',
+          fontSize: '0.825rem',
           color: 'var(--text-secondary)',
+          fontFamily: 'var(--font-display)',
           fontStyle: 'italic',
           lineHeight: 1.45,
           marginBottom: '1rem',
@@ -164,20 +195,26 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
         }}
       >
         <div>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Calls Handled</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+            Calls Handled
+          </span>
           <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
             {agent.stats.totalCalls}
           </span>
         </div>
         <div>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Resolution</span>
-          <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--emerald-400)' }}>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+            Resolution
+          </span>
+          <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--status-active)' }}>
             {agent.stats.resolutionRate}%
           </span>
         </div>
         <div>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Last Call</span>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+            Last Session
+          </span>
+          <span style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
             {agent.stats.lastActive}
           </span>
         </div>
@@ -188,20 +225,20 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
         <Button
           variant="primary"
           size="sm"
-          icon={<Play size={14} />}
+          icon={<Phone size={13} />}
           onClick={handleTestClick}
           style={{ flex: 1 }}
         >
-          Test Voice Call
+          Test Voice Studio
         </Button>
 
         <Button
           variant="secondary"
           size="sm"
-          icon={<Sliders size={14} />}
+          icon={<Sliders size={13} />}
           onClick={handleEditClick}
         >
-          Edit
+          Configure
         </Button>
       </div>
     </Card>

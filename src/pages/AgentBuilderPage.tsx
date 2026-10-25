@@ -354,25 +354,25 @@ Triage: Collect caller name, phone number, and reason for visit. Express gentle 
             style={{
               background: 'transparent',
               border: 'none',
-              color: 'var(--cyan-400)',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '0.4rem',
               fontSize: '0.85rem',
-              marginBottom: '0.5rem',
+              marginBottom: '0.4rem',
               padding: 0
             }}
           >
             <ArrowLeft size={15} />
-            <span>Back to Dashboard</span>
+            <span>Return to Dashboard</span>
           </button>
 
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700 }}>
-            {editAgentId ? 'Configure AI Receptionist' : 'Prompt-First Agent Builder'}
-          </h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            Start with plain language to synthesize an intelligent, structured voice AI receptionist.
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 500, fontFamily: 'var(--font-display)', margin: 0 }}>
+            {editAgentId ? 'Configure Voice Receptionist' : 'Voice Agent Studio'}
+          </h2>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+            Draft a tailored conversational voice agent starting from a single sentence.
           </p>
         </div>
 
@@ -387,7 +387,7 @@ Triage: Collect caller name, phone number, and reason for visit. Express gentle 
             loading={saving}
             onClick={handleSave}
           >
-            {saveSuccess ? 'Saved Successfully!' : editAgentId ? 'Update Receptionist' : 'Deploy Receptionist'}
+            {saveSuccess ? 'Saved Draft!' : editAgentId ? 'Update Configuration' : 'Save & Publish Draft'}
           </Button>
         </div>
       </div>

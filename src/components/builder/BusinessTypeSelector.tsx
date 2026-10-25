@@ -11,19 +11,19 @@ interface BusinessTypeSelectorProps {
 const getTemplateIcon = (id: BusinessCategory) => {
   switch (id) {
     case 'dental':
-      return <Stethoscope size={20} />;
+      return <Stethoscope size={18} />;
     case 'auto_repair':
-      return <Wrench size={20} />;
+      return <Wrench size={18} />;
     case 'real_estate':
-      return <Building size={20} />;
+      return <Building size={18} />;
     case 'law_firm':
-      return <Scale size={20} />;
+      return <Scale size={18} />;
     case 'salon_spa':
-      return <Sparkles size={20} />;
+      return <Sparkles size={18} />;
     case 'restaurant':
-      return <Utensils size={20} />;
+      return <Utensils size={18} />;
     default:
-      return <Cpu size={20} />;
+      return <Cpu size={18} />;
   }
 };
 
@@ -33,18 +33,11 @@ export const BusinessTypeSelector: React.FC<BusinessTypeSelectorProps> = ({
   onSelect
 }) => {
   return (
-    <div style={{ marginBottom: '1.75rem' }}>
-      <label className="vf-label" style={{ marginBottom: '0.75rem' }}>
-        <span>1. Select Business Category</span>
-        <span style={{ fontSize: '0.75rem', color: 'var(--cyan-400)' }}>
-          Loads industry-specific receptionist prompt & FAQs
-        </span>
-      </label>
-
+    <div>
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
           gap: '0.75rem'
         }}
       >
@@ -55,35 +48,34 @@ export const BusinessTypeSelector: React.FC<BusinessTypeSelectorProps> = ({
               key={tpl.id}
               onClick={() => onSelect(tpl)}
               style={{
-                backgroundColor: isSelected ? 'var(--cyan-subtle)' : 'var(--bg-surface)',
-                border: isSelected ? '1px solid var(--cyan-400)' : '1px solid var(--border-default)',
-                borderRadius: 'var(--radius-md)',
-                padding: '0.9rem',
+                backgroundColor: isSelected ? 'var(--accent-subtle)' : 'var(--bg-surface-warm)',
+                border: isSelected ? '1px solid var(--accent-primary)' : '1px solid var(--border-default)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.85rem 1rem',
                 cursor: 'pointer',
-                transition: 'all var(--transition-fast)',
-                boxShadow: isSelected ? '0 0 15px rgba(6, 182, 212, 0.15)' : 'none'
+                transition: 'all var(--transition-fast)'
               }}
             >
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.65rem',
-                  marginBottom: '0.35rem'
+                  gap: '0.5rem',
+                  marginBottom: '0.25rem'
                 }}
               >
                 <div
                   style={{
-                    color: isSelected ? 'var(--cyan-300)' : 'var(--text-secondary)'
+                    color: isSelected ? 'var(--accent-primary)' : 'var(--text-muted)'
                   }}
                 >
                   {getTemplateIcon(tpl.id)}
                 </div>
                 <h4
                   style={{
-                    fontSize: '0.875rem',
+                    fontSize: '0.85rem',
                     fontWeight: 600,
-                    color: isSelected ? '#fff' : 'var(--text-primary)'
+                    color: isSelected ? 'var(--accent-primary)' : 'var(--text-primary)'
                   }}
                 >
                   {tpl.label}
@@ -93,8 +85,9 @@ export const BusinessTypeSelector: React.FC<BusinessTypeSelectorProps> = ({
               <p
                 style={{
                   fontSize: '0.74rem',
-                  color: isSelected ? 'var(--text-secondary)' : 'var(--text-muted)',
-                  lineHeight: 1.35
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1.35,
+                  margin: 0
                 }}
               >
                 {tpl.shortDesc}

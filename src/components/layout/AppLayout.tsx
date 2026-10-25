@@ -8,16 +8,14 @@ export const AppLayout: React.FC = () => {
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Informative Environment Banner */}
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-canvas)' }}>
+      {/* Truthful Mode Banner */}
       {!bannerDismissed && (
         <div
           style={{
-            background: IS_MOCK_MODE
-              ? 'linear-gradient(90deg, #131127 0%, #0E1626 100%)'
-              : 'linear-gradient(90deg, #091D1A 0%, #0B1E29 100%)',
-            borderBottom: '1px solid var(--border-subtle)',
-            padding: '0.4rem 1.5rem',
+            backgroundColor: 'var(--bg-surface-raised)',
+            borderBottom: '1px solid var(--border-default)',
+            padding: '0.45rem 1.5rem',
             fontSize: '0.78rem',
             color: 'var(--text-secondary)',
             display: 'flex',
@@ -27,20 +25,20 @@ export const AppLayout: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <Info size={14} style={{ color: IS_MOCK_MODE ? 'var(--violet-400)' : 'var(--emerald-400)' }} />
+            <Info size={14} style={{ color: IS_MOCK_MODE ? 'var(--status-mock)' : 'var(--status-active)', flexShrink: 0 }} />
             <span>
               {IS_MOCK_MODE ? (
                 <>
-                  <strong style={{ color: 'var(--violet-400)' }}>Mock Adapter Active:</strong> Frontend running in isolated mode. When your teammate's FastAPI backend is running, set{' '}
-                  <code style={{ background: 'rgba(255,255,255,0.08)', padding: '0.1rem 0.35rem', borderRadius: '4px', color: '#fff' }}>
+                  <strong style={{ color: 'var(--text-primary)' }}>Demo Mode:</strong> Running with a local mock adapter. To connect your teammate's FastAPI backend, configure{' '}
+                  <code style={{ background: 'var(--bg-surface-muted)', padding: '0.1rem 0.35rem', borderRadius: 'var(--radius-xs)', color: 'var(--text-primary)', border: '1px solid var(--border-default)' }}>
                     VITE_USE_MOCK=false
                   </code>{' '}
-                  to connect to <code style={{ color: 'var(--cyan-400)' }}>{API_BASE_URL}</code>.
+                  pointing to <code style={{ color: 'var(--accent-primary)' }}>{API_BASE_URL}</code>.
                 </>
               ) : (
                 <>
-                  <strong style={{ color: 'var(--emerald-400)' }}>Live Backend Mode:</strong> Connecting to{' '}
-                  <code style={{ color: 'var(--cyan-400)' }}>{API_BASE_URL}</code>.
+                  <strong style={{ color: 'var(--status-active)' }}>Live API Connected:</strong> Routing requests to{' '}
+                  <code style={{ color: 'var(--accent-primary)' }}>{API_BASE_URL}</code>.
                 </>
               )}
             </span>
@@ -55,7 +53,7 @@ export const AppLayout: React.FC = () => {
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              padding: '0.15rem'
+              padding: '0.2rem'
             }}
             title="Dismiss notice"
           >
@@ -68,27 +66,27 @@ export const AppLayout: React.FC = () => {
       <Navbar />
 
       {/* Page Content */}
-      <main style={{ flex: 1, padding: '2rem 0 3.5rem' }}>
+      <main style={{ flex: 1, padding: '2.5rem 0 4rem' }}>
         <Outlet />
       </main>
 
-      {/* Footer */}
+      {/* Quiet Editorial Footer */}
       <footer
         style={{
-          borderTop: '1px solid var(--border-hairline)',
-          backgroundColor: 'rgba(6, 8, 13, 0.7)',
-          padding: '1.25rem 0',
+          borderTop: '1px solid var(--border-default)',
+          backgroundColor: 'var(--bg-surface-warm)',
+          padding: '1.5rem 0',
           fontSize: '0.8rem',
           color: 'var(--text-muted)'
         }}
       >
         <div className="vf-container vf-flex vf-items-center vf-justify-between" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <ShieldCheck size={16} style={{ color: 'var(--cyan-400)' }} />
-            <span>VaaniFlow AI — HackBriven Build Arena ElevenLabs Voice AI Challenge</span>
+            <ShieldCheck size={16} style={{ color: 'var(--accent-primary)' }} />
+            <span>VaaniFlow — HackBriven Build Arena ElevenLabs Voice AI Challenge</span>
           </div>
           <div>
-            <span>No API secrets exposed on frontend • Typed adapter architecture</span>
+            <span>Client-safe typed service layer • No API secrets stored in frontend code</span>
           </div>
         </div>
       </footer>

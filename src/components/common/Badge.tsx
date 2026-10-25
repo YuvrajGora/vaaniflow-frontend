@@ -17,34 +17,28 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const variantClass = {
     active: 'vf-badge-active',
-    cyan: 'vf-badge-cyan',
+    cyan: 'vf-badge-accent',
     amber: 'vf-badge-amber',
     rose: 'vf-badge-rose',
     muted: 'vf-badge-muted',
     mock: 'vf-badge-mock'
   }[variant];
 
+  const dotColor = {
+    active: 'var(--status-active)',
+    cyan: 'var(--accent-primary)',
+    amber: 'var(--status-warning)',
+    rose: 'var(--status-danger)',
+    muted: 'var(--text-muted)',
+    mock: 'var(--status-mock)'
+  }[variant];
+
   return (
     <span className={`vf-badge ${variantClass} ${className}`}>
       {dot && (
         <span
-          className={`vf-status-dot ${
-            variant === 'active'
-              ? 'vf-status-dot-active'
-              : variant === 'cyan'
-              ? 'vf-status-dot-cyan'
-              : ''
-          }`}
-          style={{
-            backgroundColor:
-              variant === 'amber'
-                ? 'var(--amber-400)'
-                : variant === 'rose'
-                ? 'var(--rose-400)'
-                : variant === 'mock'
-                ? 'var(--violet-400)'
-                : undefined
-          }}
+          className="vf-status-dot"
+          style={{ backgroundColor: dotColor }}
         />
       )}
       {children}

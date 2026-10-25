@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Bot, Mic, Clock, PlusCircle, Radio, Sparkles, Layers } from 'lucide-react';
+import { Layers, Wand2, Mic, Clock, Plus } from 'lucide-react';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
 import { IS_MOCK_MODE } from '../../services/agentService';
@@ -14,8 +14,7 @@ export const Navbar: React.FC = () => {
         position: 'sticky',
         top: 0,
         zIndex: 40,
-        backgroundColor: 'rgba(11, 15, 25, 0.85)',
-        backdropFilter: 'blur(12px)',
+        backgroundColor: 'var(--bg-surface-warm)',
         borderBottom: '1px solid var(--border-default)',
         height: 'var(--header-height)',
         display: 'flex',
@@ -24,7 +23,7 @@ export const Navbar: React.FC = () => {
     >
       <div className="vf-container vf-flex vf-items-center vf-justify-between">
         {/* Left: Brand Identity */}
-        <div className="vf-flex vf-items-center vf-gap-4">
+        <div className="vf-flex vf-items-center vf-gap-6">
           <NavLink
             to="/"
             style={{
@@ -37,66 +36,74 @@ export const Navbar: React.FC = () => {
           >
             <div
               style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: 'var(--radius-md)',
-                background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(6, 182, 212, 0.05) 100%)',
-                border: '1px solid var(--cyan-border)',
+                width: '32px',
+                height: '32px',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--accent-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--cyan-400)',
-                boxShadow: '0 0 12px rgba(6, 182, 212, 0.15)'
+                color: '#FFFFFF'
               }}
             >
-              <Radio size={19} />
+              <Mic size={17} />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.02em' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.45rem' }}>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 600,
+                    fontSize: '1.35rem',
+                    letterSpacing: '-0.02em',
+                    color: 'var(--text-primary)',
+                    lineHeight: 1
+                  }}
+                >
                   VaaniFlow
                 </span>
                 <span
                   style={{
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.05em',
-                    color: 'var(--cyan-400)',
-                    background: 'var(--cyan-subtle)',
+                    fontSize: '0.68rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.04em',
+                    color: 'var(--accent-primary)',
+                    background: 'var(--accent-subtle)',
                     padding: '0.1rem 0.35rem',
-                    borderRadius: '4px',
-                    border: '1px solid var(--cyan-border)'
+                    borderRadius: 'var(--radius-xs)',
+                    border: '1px solid var(--accent-border)',
+                    textTransform: 'uppercase'
                   }}
                 >
-                  AI
+                  Studio
                 </span>
               </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', lineHeight: 1 }}>
-                ElevenLabs Voice Receptionist
+              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', lineHeight: 1.2, marginTop: '2px' }}>
+                Voice AI Agent Platform
               </div>
             </div>
           </NavLink>
 
-          {/* Navigation Links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '1.5rem' }}>
+          {/* Editorial Navigation Tabs */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginLeft: '1rem' }}>
             <NavLink
               to="/"
               end
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.45rem 0.85rem',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '0.85rem',
+                gap: '0.4rem',
+                padding: '0.45rem 0.75rem',
+                borderRadius: 'var(--radius-xs)',
+                fontSize: '0.825rem',
                 fontWeight: isActive ? 600 : 500,
-                color: isActive ? 'var(--cyan-300)' : 'var(--text-secondary)',
-                backgroundColor: isActive ? 'var(--cyan-subtle)' : 'transparent',
-                border: isActive ? '1px solid var(--cyan-border)' : '1px solid transparent',
+                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                backgroundColor: isActive ? 'var(--bg-surface-raised)' : 'transparent',
+                borderBottom: isActive ? '2px solid var(--accent-primary)' : '2px solid transparent',
                 transition: 'all var(--transition-fast)'
               })}
             >
-              <Layers size={16} />
+              <Layers size={14} />
               <span>Dashboard</span>
             </NavLink>
 
@@ -105,18 +112,18 @@ export const Navbar: React.FC = () => {
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.45rem 0.85rem',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '0.85rem',
+                gap: '0.4rem',
+                padding: '0.45rem 0.75rem',
+                borderRadius: 'var(--radius-xs)',
+                fontSize: '0.825rem',
                 fontWeight: isActive ? 600 : 500,
-                color: isActive ? 'var(--cyan-300)' : 'var(--text-secondary)',
-                backgroundColor: isActive ? 'var(--cyan-subtle)' : 'transparent',
-                border: isActive ? '1px solid var(--cyan-border)' : '1px solid transparent',
+                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                backgroundColor: isActive ? 'var(--bg-surface-raised)' : 'transparent',
+                borderBottom: isActive ? '2px solid var(--accent-primary)' : '2px solid transparent',
                 transition: 'all var(--transition-fast)'
               })}
             >
-              <Bot size={16} />
+              <Wand2 size={14} />
               <span>Agent Builder</span>
             </NavLink>
 
@@ -125,30 +132,19 @@ export const Navbar: React.FC = () => {
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.45rem 0.85rem',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '0.85rem',
+                gap: '0.4rem',
+                padding: '0.45rem 0.75rem',
+                borderRadius: 'var(--radius-xs)',
+                fontSize: '0.825rem',
                 fontWeight: isActive ? 600 : 500,
-                color: isActive ? 'var(--cyan-300)' : 'var(--text-secondary)',
-                backgroundColor: isActive ? 'var(--cyan-subtle)' : 'transparent',
-                border: isActive ? '1px solid var(--cyan-border)' : '1px solid transparent',
+                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                backgroundColor: isActive ? 'var(--bg-surface-raised)' : 'transparent',
+                borderBottom: isActive ? '2px solid var(--accent-primary)' : '2px solid transparent',
                 transition: 'all var(--transition-fast)'
               })}
             >
-              <Mic size={16} />
-              <span>Voice Testing</span>
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  padding: '0.1rem 0.35rem',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  color: 'var(--text-muted)'
-                }}
-              >
-                M2
-              </span>
+              <Mic size={14} />
+              <span>Voice Studio</span>
             </NavLink>
 
             <NavLink
@@ -156,39 +152,28 @@ export const Navbar: React.FC = () => {
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.45rem 0.85rem',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '0.85rem',
+                gap: '0.4rem',
+                padding: '0.45rem 0.75rem',
+                borderRadius: 'var(--radius-xs)',
+                fontSize: '0.825rem',
                 fontWeight: isActive ? 600 : 500,
-                color: isActive ? 'var(--cyan-300)' : 'var(--text-secondary)',
-                backgroundColor: isActive ? 'var(--cyan-subtle)' : 'transparent',
-                border: isActive ? '1px solid var(--cyan-border)' : '1px solid transparent',
+                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                backgroundColor: isActive ? 'var(--bg-surface-raised)' : 'transparent',
+                borderBottom: isActive ? '2px solid var(--accent-primary)' : '2px solid transparent',
                 transition: 'all var(--transition-fast)'
               })}
             >
-              <Clock size={16} />
-              <span>Sessions</span>
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  padding: '0.1rem 0.35rem',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  color: 'var(--text-muted)'
-                }}
-              >
-                M2
-              </span>
+              <Clock size={14} />
+              <span>Session Logs</span>
             </NavLink>
           </nav>
         </div>
 
-        {/* Right: Environment Info & Action */}
+        {/* Right Controls */}
         <div className="vf-flex vf-items-center vf-gap-3">
           {IS_MOCK_MODE ? (
             <Badge variant="mock" dot>
-              Mock Adapter
+              Demo Adapter
             </Badge>
           ) : (
             <Badge variant="active" dot>
@@ -196,30 +181,12 @@ export const Navbar: React.FC = () => {
             </Badge>
           )}
 
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              padding: '0.25rem 0.6rem',
-              borderRadius: 'var(--radius-full)',
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid var(--border-hairline)',
-              fontSize: '0.75rem',
-              color: 'var(--text-secondary)'
-            }}
-            title="ElevenLabs conversational agent integration prepared"
-          >
-            <Sparkles size={13} style={{ color: 'var(--cyan-400)' }} />
-            <span>ElevenLabs Ready</span>
-          </div>
-
           <Button
             size="sm"
-            icon={<PlusCircle size={15} />}
+            icon={<Plus size={14} />}
             onClick={() => navigate('/builder')}
           >
-            New Agent
+            Create Agent
           </Button>
         </div>
       </div>

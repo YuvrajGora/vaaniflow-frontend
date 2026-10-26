@@ -1,12 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Layers, Wand2, Mic, Clock, Plus } from 'lucide-react';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
-import { IS_MOCK_MODE } from '../../services/agentService';
+import { IS_MOCK_MODE, agentService } from '../../services/agentService';
 
 export const Navbar: React.FC = () => {
   const navigate = useNavigate();
+  const [backendHealthy, setBackendHealthy] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (IS_MOCK_MODE) return;
+    let isMounted = true;
+    agentService
+      .checkHealth()
+      .then((res) => {
+        if (isMounted) setBackendHealthy(res.status === 'ok');
+      })
+      .catch(() => {
+        if (isMounted) setBackendHealthy(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <header
@@ -175,9 +193,17 @@ export const Navbar: React.FC = () => {
             <Badge variant="mock" dot>
               Demo Adapter
             </Badge>
-          ) : (
-            <Badge variant="active" dot>
+          ) : backendHealthy === true ? (
+            <Badge variant="active" dot title="FastAPI backend connected at http://127.0.0.1:8000/api">
               FastAPI Live
+            </Badge>
+          ) : backendHealthy === false ? (
+            <Badge variant="rose" dot title="Cannot connect to FastAPI at http://127.0.0.1:8000/api">
+              Backend Offline
+            </Badge>
+          ) : (
+            <Badge variant="muted" dot>
+              Connecting...
             </Badge>
           )}
 

@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Save, ArrowLeft, Check, AlertCircle } from 'lucide-react';
-import { agentService } from '../services/agentService';
-import type { BusinessCategory, BusinessTemplate, VoiceOption, GeneratedAgentConfig } from '../types/agent';
+import { agentService, IS_MOCK_MODE } from '../services/agentService';
+import type {
+  BackendGeneratedAgentConfig,
+  BusinessCategory,
+  BusinessTemplate,
+  VoiceOption,
+  GeneratedAgentConfig
+} from '../types/agent';
 import { PromptInputHero } from '../components/builder/PromptInputHero';
 import { PromptRefinementBar } from '../components/builder/PromptRefinementBar';
 import { StructuredConfigEditor, type StructuredConfigFormState } from '../components/builder/StructuredConfigEditor';
@@ -29,6 +35,8 @@ export const AgentBuilderPage: React.FC = () => {
   const [isRefining, setIsRefining] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [rawBackendConfig, setRawBackendConfig] = useState<BackendGeneratedAgentConfig | undefined>(undefined);
+  const [isMockGenerated, setIsMockGenerated] = useState<boolean>(IS_MOCK_MODE);
 
   // Form Configuration State
   const [config, setConfig] = useState<StructuredConfigFormState>({
@@ -201,6 +209,8 @@ Triage: Collect caller name, phone number, and reason for visit. Express gentle 
         setSampleQueries(generated.sampleQueries);
       }
 
+      setRawBackendConfig(generated.rawBackendConfig);
+      setIsMockGenerated(generated.isMockGeneration);
       setHasGenerated(true);
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to generate agent configuration from prompt.');
@@ -304,19 +314,23 @@ Triage: Collect caller name, phone number, and reason for visit. Express gentle 
         escalationTriggers: config.escalationTriggers,
         fallbackMessage: config.fallbackMessage,
         generatedFromPrompt: prompt,
-        status: 'active' as const
+        status: 'active' as const,
+        rawBackendConfig
       };
 
       if (editAgentId) {
         await agentService.updateAgent(editAgentId, payload);
+        setSaveSuccess(true);
+        setTimeout(() => {
+          navigate('/');
+        }, 1200);
       } else {
-        await agentService.createAgent(payload);
+        const created = await agentService.createAgent(payload);
+        setSaveSuccess(true);
+        setTimeout(() => {
+          navigate(`/test?agentId=${created.id || created.agent_id}`);
+        }, 1200);
       }
-
-      setSaveSuccess(true);
-      setTimeout(() => {
-        navigate('/');
-      }, 1200);
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to save receptionist agent.');
       setSaving(false);
@@ -387,7 +401,13 @@ Triage: Collect caller name, phone number, and reason for visit. Express gentle 
             loading={saving}
             onClick={handleSave}
           >
-            {saveSuccess ? 'Saved Draft!' : editAgentId ? 'Update Configuration' : 'Save & Publish Draft'}
+            {saveSuccess
+              ? 'Agent Provisioned!'
+              : editAgentId
+              ? 'Update Configuration'
+              : !IS_MOCK_MODE
+              ? 'Provision Live ElevenLabs Agent'
+              : 'Save & Publish Draft'}
           </Button>
         </div>
       </div>
@@ -467,7 +487,7 @@ Triage: Collect caller name, phone number, and reason for visit. Express gentle 
             onChange={setConfig}
             voices={voices}
             originalPrompt={prompt}
-            isMockGenerated={true}
+            isMockGenerated={isMockGenerated}
           />
         </div>
 

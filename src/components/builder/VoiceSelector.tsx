@@ -59,17 +59,18 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
     <div style={{ marginBottom: '1.25rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
         <label className="vf-label" style={{ margin: 0 }}>
-          <span>Curated ElevenLabs Voice Persona</span>
+          <span>Curated ElevenLabs Voice Personas</span>
         </label>
         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-          {isSpeechAvailable ? 'Click "Sample Voice" to hear tone' : 'Browser audio preview unavailable'}
+          {isSpeechAvailable ? 'Audio previews use browser speech synthesis' : 'Browser audio preview unavailable'}
         </span>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
         {voices.map((voice) => {
-          const isSelected = selectedVoiceId === voice.id;
+          const isSelected = selectedVoiceId === voice.id || selectedVoiceId === voice.elevenLabsVoiceId;
           const isPlaying = playingVoiceId === voice.id;
+          const isValidated = voice.elevenLabsVoiceId === 'SZfY4K69FwXus87eayHK';
 
           return (
             <div
@@ -124,10 +125,28 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
                     >
                       {voice.accent} • {voice.gender}
                     </span>
+                    {isValidated && (
+                      <span
+                        style={{
+                          fontSize: '0.65rem',
+                          fontWeight: 600,
+                          backgroundColor: 'var(--status-active-bg)',
+                          color: 'var(--status-active)',
+                          border: '1px solid var(--status-active-border)',
+                          padding: '0.05rem 0.35rem',
+                          borderRadius: '3px'
+                        }}
+                      >
+                        Backend Validated
+                      </span>
+                    )}
                   </div>
                   <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, marginTop: '0.15rem' }}>
                     {voice.tone}
                   </p>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                    ID: {voice.elevenLabsVoiceId}
+                  </span>
                 </div>
               </div>
 
@@ -136,7 +155,11 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
                 type="button"
                 onClick={(e) => handlePlaySample(e, voice)}
                 disabled={!isSpeechAvailable}
-                title={isSpeechAvailable ? 'Preview voice audio sample' : 'Audio preview not supported in this browser'}
+                title={
+                  isSpeechAvailable
+                    ? 'Preview script with local browser TTS (not actual ElevenLabs neural stream)'
+                    : 'Audio preview not supported in this browser'
+                }
                 style={{
                   background: isPlaying ? 'var(--accent-primary)' : 'var(--bg-surface)',
                   border: isPlaying ? '1px solid var(--accent-primary)' : '1px solid var(--border-default)',
@@ -160,7 +183,7 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
                 ) : (
                   <>
                     <Volume2 size={13} />
-                    <span>Sample Voice</span>
+                    <span>Browser Preview</span>
                   </>
                 )}
               </button>

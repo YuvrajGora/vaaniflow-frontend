@@ -4,7 +4,18 @@
 // ==========================================================================
 import type { Agent, BusinessTemplate, DashboardMetrics, Session, VoiceOption } from '../types/agent';
 
+export const VALIDATED_VOICE_ID = 'SZfY4K69FwXus87eayHK';
+
 export const MOCK_VOICES: VoiceOption[] = [
+  {
+    id: 'aarav-validated',
+    name: 'Aarav (Validated Live Voice)',
+    gender: 'male',
+    accent: 'Indian English',
+    tone: 'Warm, Courteous & Conversational',
+    elevenLabsVoiceId: 'SZfY4K69FwXus87eayHK',
+    previewSampleText: "Namaste! Welcome to our clinic. I am your voice receptionist. How may I assist you with your smile today?"
+  },
   {
     id: 'rachel',
     name: 'Rachel',

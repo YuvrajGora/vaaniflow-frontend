@@ -66,11 +66,13 @@ export interface GeneratedAgentConfig {
   sampleQueries?: string[];
   generatedFromPrompt?: string;
   isMockGeneration: boolean;
+  rawBackendConfig?: BackendGeneratedAgentConfig;
 }
 
 export interface GenerateAgentPromptInput {
   prompt: string;
   category?: BusinessCategory;
+  voiceId?: string;
 }
 
 export interface RefineAgentPromptInput {
@@ -80,6 +82,9 @@ export interface RefineAgentPromptInput {
 
 export interface Agent {
   id: string;
+  agent_id?: string;
+  backendId?: number;
+  isBackendProvisioned?: boolean;
   name: string;
   businessName: string;
   businessType: BusinessCategory;
@@ -104,6 +109,102 @@ export interface Agent {
   stats: AgentStats;
   createdAt: string;
   updatedAt: string;
+}
+
+// ==========================================================================
+// FastAPI Backend Contract Schemas
+// ==========================================================================
+
+export interface BackendVoicePreference {
+  gender?: string | null;
+  accent?: string | null;
+  description?: string | null;
+  voice_id?: string | null;
+}
+
+export interface BackendAgentPreferences {
+  language?: string | null;
+  tone?: string | null;
+  business_type?: string | null;
+  voice_gender?: string | null;
+  voice_accent?: string | null;
+  voice_id?: string | null;
+  capabilities?: string[] | null;
+}
+
+export interface BackendConfigureRequest {
+  prompt: string;
+  preferences?: BackendAgentPreferences;
+}
+
+export interface BackendFAQItem {
+  question: string;
+  answer: string;
+}
+
+export interface BackendAppointmentHandling {
+  enabled?: boolean;
+  instructions?: string;
+}
+
+export interface BackendGeneratedAgentConfig {
+  agent_name: string;
+  business_type: string;
+  primary_language?: string;
+  additional_languages?: string[];
+  first_message: string;
+  system_prompt: string;
+  voice_preference?: BackendVoicePreference;
+  intended_capabilities?: string[];
+  faqs?: BackendFAQItem[];
+  appointment_handling?: BackendAppointmentHandling;
+}
+
+export interface BackendConfigureResponse {
+  status: string;
+  configuration: BackendGeneratedAgentConfig;
+  elevenlabs_config_preview: Record<string, unknown>;
+}
+
+export interface BackendAgentCreateRequest {
+  configuration: BackendGeneratedAgentConfig;
+  voice_id?: string | null;
+}
+
+export interface BackendAgentCreateResponse {
+  status: string;
+  agent_id: string;
+  name: string;
+  business_type: string;
+  voice_id: string;
+  created_at: string;
+}
+
+export interface BackendAgentSummary {
+  id: number;
+  agent_id: string;
+  name: string;
+  business_type: string;
+  voice_id: string;
+  created_at: string;
+}
+
+export interface BackendAgentListResponse {
+  status: string;
+  agents: BackendAgentSummary[];
+  total: number;
+}
+
+export interface BackendSessionResponse {
+  status: string;
+  agent_id: string;
+  signed_url: string;
+  expires_in_seconds: number;
+}
+
+export interface BackendHealthResponse {
+  status: string;
+  service?: string;
 }
 
 export type SessionOutcome =

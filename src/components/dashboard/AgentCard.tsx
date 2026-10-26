@@ -115,12 +115,16 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               <span>{formatCategoryName(agent.businessType)}</span>
             </span>
 
-            {agent.status === 'active' ? (
+            {agent.isBackendProvisioned || agent.agent_id ? (
+              <Badge variant="active" dot>
+                ElevenLabs Live
+              </Badge>
+            ) : agent.status === 'active' ? (
               <Badge variant="active" dot>
                 Live Receptionist
               </Badge>
             ) : (
-              <Badge variant="muted">Draft</Badge>
+              <Badge variant="muted">Local Draft</Badge>
             )}
           </div>
 
@@ -138,6 +142,20 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
           <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
             {agent.businessName}
           </p>
+
+          {agent.agent_id && (
+            <div
+              style={{
+                fontSize: '0.68rem',
+                fontFamily: 'monospace',
+                color: 'var(--text-muted)',
+                marginTop: '0.25rem',
+                wordBreak: 'break-all'
+              }}
+            >
+              ID: {agent.agent_id}
+            </div>
+          )}
         </div>
 
         {/* ElevenLabs Voice Badge */}
@@ -151,12 +169,15 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
             background: 'var(--bg-surface-raised)',
             border: '1px solid var(--border-default)',
             fontSize: '0.72rem',
-            color: 'var(--text-secondary)'
+            color: 'var(--text-secondary)',
+            maxWidth: '130px'
           }}
-          title="Configured Voice"
+          title={`Configured Voice: ${agent.voiceId}`}
         >
-          <Mic size={12} style={{ color: 'var(--accent-primary)' }} />
-          <span style={{ textTransform: 'capitalize', fontWeight: 500 }}>{agent.voiceId}</span>
+          <Mic size={12} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>
+            {agent.voiceId === 'SZfY4K69FwXus87eayHK' ? 'Aarav (Live)' : agent.voiceId}
+          </span>
         </div>
       </div>
 
@@ -182,7 +203,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
         "{agent.firstMessage}"
       </div>
 
-      {/* Stats Summary */}
+      {/* Stats Summary - Truthful display for backend provisioned agents vs mock agents */}
       <div
         style={{
           display: 'grid',
@@ -194,30 +215,61 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
           marginBottom: '1.25rem'
         }}
       >
-        <div>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
-            Calls Handled
-          </span>
-          <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-            {agent.stats.totalCalls}
-          </span>
-        </div>
-        <div>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
-            Resolution
-          </span>
-          <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--status-active)' }}>
-            {agent.stats.resolutionRate}%
-          </span>
-        </div>
-        <div>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
-            Last Session
-          </span>
-          <span style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
-            {agent.stats.lastActive}
-          </span>
-        </div>
+        {agent.isBackendProvisioned || agent.agent_id ? (
+          <>
+            <div>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                Channel
+              </span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                WebSocket
+              </span>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                Audio Provider
+              </span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--status-active)' }}>
+                ElevenLabs
+              </span>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                Created
+              </span>
+              <span style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
+                {agent.createdAt ? new Date(agent.createdAt).toLocaleDateString() : 'Active'}
+              </span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                Calls Handled
+              </span>
+              <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                {agent.stats.totalCalls}
+              </span>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                Resolution
+              </span>
+              <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--status-active)' }}>
+                {agent.stats.resolutionRate}%
+              </span>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                Last Session
+              </span>
+              <span style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
+                {agent.stats.lastActive}
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Action Buttons */}
@@ -237,8 +289,9 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
           size="sm"
           icon={<Sliders size={13} />}
           onClick={handleEditClick}
+          title={agent.isBackendProvisioned ? 'Clone or customize this agent configuration' : 'Edit Configuration'}
         >
-          Configure
+          {agent.isBackendProvisioned ? 'Customize' : 'Configure'}
         </Button>
       </div>
     </Card>

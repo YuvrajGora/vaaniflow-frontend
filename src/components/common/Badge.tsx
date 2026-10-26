@@ -7,13 +7,15 @@ interface BadgeProps {
   variant?: BadgeVariant;
   dot?: boolean;
   className?: string;
+  title?: string;
 }
 
 export const Badge: React.FC<BadgeProps> = ({
   children,
   variant = 'muted',
   dot = false,
-  className = ''
+  className = '',
+  title
 }) => {
   const variantClass = {
     active: 'vf-badge-active',
@@ -34,7 +36,7 @@ export const Badge: React.FC<BadgeProps> = ({
   }[variant];
 
   return (
-    <span className={`vf-badge ${variantClass} ${className}`}>
+    <span className={`vf-badge ${variantClass} ${className}`} title={title}>
       {dot && (
         <span
           className="vf-status-dot"

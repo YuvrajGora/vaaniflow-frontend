@@ -28,6 +28,24 @@ export class MockAgentAdapter implements AgentApiClient {
   public readonly isMockMode = true;
   public readonly apiBaseUrl = 'MOCK_INTERNAL_ADAPTER';
 
+  async checkHealth(): Promise<import('../types/agent').BackendHealthResponse> {
+    await delay(50);
+    return {
+      status: 'mock_active',
+      service: 'frontend-mock-adapter'
+    };
+  }
+
+  async authorizeSession(agentId: string): Promise<import('../types/agent').BackendSessionResponse> {
+    await delay(100);
+    return {
+      status: 'ok',
+      agent_id: agentId,
+      signed_url: 'mock://simulated-browser-session',
+      expires_in_seconds: 900
+    };
+  }
+
   private loadAgents(): Agent[] {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.AGENTS);

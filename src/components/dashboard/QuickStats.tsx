@@ -161,7 +161,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ metrics }) => {
         </Card>
       </div>
 
-      {IS_MOCK_MODE && (
+      {IS_MOCK_MODE ? (
         <div
           style={{
             display: 'flex',
@@ -175,6 +175,21 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ metrics }) => {
         >
           <Info size={12} />
           <span>Metrics reflect simulated receptionist sessions from local demo dataset.</span>
+        </div>
+      ) : (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            fontSize: '0.72rem',
+            color: 'var(--text-muted)',
+            marginTop: '0.5rem',
+            paddingLeft: '0.25rem'
+          }}
+        >
+          <Info size={12} />
+          <span>Active receptionists loaded live from FastAPI backend. Voice call sessions stream directly via WebSockets.</span>
         </div>
       )}
     </div>

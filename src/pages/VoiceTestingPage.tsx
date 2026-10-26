@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useConversation } from '@elevenlabs/react';
 import {
   Mic,
   MicOff,
@@ -19,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
-import { agentService } from '../services/agentService';
+import { agentService, IS_MOCK_MODE } from '../services/agentService';
 import type { Agent, VoiceOption } from '../types/agent';
 
 type CallState =
@@ -70,38 +71,8 @@ export const VoiceTestingPage: React.FC = () => {
   const animFrameRef = useRef<number | null>(null);
   const callTimerRef = useRef<number | null>(null);
   const transcriptBottomRef = useRef<HTMLDivElement | null>(null);
-  const speechRecognitionRef = useRef<any>(null);
 
-  // Load agents and voices
-  useEffect(() => {
-    let isMounted = true;
-    Promise.all([agentService.getAgents(), agentService.getVoices()])
-      .then(([fetchedAgents, fetchedVoices]) => {
-        if (!isMounted) return;
-        setAgents(fetchedAgents);
-        setVoices(fetchedVoices);
-
-        if (agentId) {
-          const match = fetchedAgents.find((a) => a.id === agentId);
-          if (match) setSelectedAgent(match);
-          else if (fetchedAgents.length > 0) setSelectedAgent(fetchedAgents[0]);
-        } else if (fetchedAgents.length > 0) {
-          setSelectedAgent(fetchedAgents[0]);
-        }
-      })
-      .catch((err) => {
-        if (isMounted) setErrorMessage(err?.message || 'Failed to load agent configuration.');
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [agentId]);
-
-  // Clean up audio resources on unmount
+  // Clean up audio resources on unmount or session end
   const cleanupAudio = useCallback(() => {
     if (callTimerRef.current) {
       clearInterval(callTimerRef.current);
@@ -111,15 +82,6 @@ export const VoiceTestingPage: React.FC = () => {
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
-    }
-
-    if (speechRecognitionRef.current) {
-      try {
-        speechRecognitionRef.current.stop();
-      } catch {
-        // Ignore errors on recognition stop
-      }
-      speechRecognitionRef.current = null;
     }
 
     if (mediaStreamRef.current) {
@@ -142,6 +104,75 @@ export const VoiceTestingPage: React.FC = () => {
     setFrequencyBars([4, 4, 4, 4, 4, 4, 4]);
   }, []);
 
+  // Official ElevenLabs React conversation hook for live WebSocket audio
+  const conversation = useConversation({
+    onConnect: () => {
+      setCallState('connected');
+      setCallDuration(0);
+      setIsMuted(false);
+      if (callTimerRef.current) clearInterval(callTimerRef.current);
+      callTimerRef.current = window.setInterval(() => {
+        setCallDuration((prev) => prev + 1);
+      }, 1000);
+    },
+    onDisconnect: () => {
+      cleanupAudio();
+      setCallState('ended');
+    },
+    onError: (errMessage: string) => {
+      cleanupAudio();
+      setCallState('error');
+      setErrorMessage(typeof errMessage === 'string' ? errMessage : 'ElevenLabs session error occurred.');
+    },
+    onMessage: (payload: any) => {
+      if (payload && payload.message) {
+        const isAgent = payload.role === 'agent' || payload.source === 'ai';
+        setTranscript((prev) => [
+          ...prev,
+          {
+            id: `msg-${Date.now()}-${isAgent ? 'agent' : 'caller'}`,
+            sender: isAgent ? 'agent' : 'caller',
+            text: payload.message,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+          }
+        ]);
+      }
+    },
+    onModeChange: ({ mode }: { mode: 'speaking' | 'listening' }) => {
+      setIsAgentSpeaking(mode === 'speaking');
+      setIsCallerSpeaking(mode === 'listening');
+    }
+  });
+
+  // Load agents and voices
+  useEffect(() => {
+    let isMounted = true;
+    Promise.all([agentService.getAgents(), agentService.getVoices()])
+      .then(([fetchedAgents, fetchedVoices]) => {
+        if (!isMounted) return;
+        setAgents(fetchedAgents);
+        setVoices(fetchedVoices);
+
+        if (agentId) {
+          const match = fetchedAgents.find((a) => a.id === agentId || a.agent_id === agentId);
+          if (match) setSelectedAgent(match);
+          else if (fetchedAgents.length > 0) setSelectedAgent(fetchedAgents[0]);
+        } else if (fetchedAgents.length > 0) {
+          setSelectedAgent(fetchedAgents[0]);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) setErrorMessage(err?.message || 'Failed to load agent configuration.');
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [agentId]);
+
   useEffect(() => {
     return () => {
       cleanupAudio();
@@ -160,7 +191,7 @@ export const VoiceTestingPage: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Speak agent message using browser TTS
+  // Speak agent message using browser TTS (Mock mode only)
   const speakAgentMessage = useCallback((text: string) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       return;
@@ -186,7 +217,7 @@ export const VoiceTestingPage: React.FC = () => {
     window.speechSynthesis.speak(utterance);
   }, []);
 
-  // Handle agent response simulation based on prompt & instructions
+  // Handle agent response simulation based on prompt & instructions (Mock mode only)
   const generateAgentReply = useCallback(
     (callerText: string) => {
       if (!selectedAgent) return;
@@ -227,7 +258,7 @@ export const VoiceTestingPage: React.FC = () => {
     [selectedAgent, speakAgentMessage]
   );
 
-  // Send a caller message
+  // Send a caller message (via ElevenLabs WebSocket in live mode, or simulation in mock mode)
   const handleSendCallerMessage = useCallback(
     (textToSend: string) => {
       if (!textToSend.trim() || callState !== 'connected') return;
@@ -242,15 +273,24 @@ export const VoiceTestingPage: React.FC = () => {
       setTranscript((prev) => [...prev, callerItem]);
       setCustomInput('');
 
-      // Simulate a realistic turn-taking delay of 750ms
-      setTimeout(() => {
-        generateAgentReply(textToSend);
-      }, 750);
+      if (!IS_MOCK_MODE) {
+        // Send directly to ElevenLabs WebSocket conversation
+        try {
+          conversation.sendUserMessage(textToSend.trim());
+        } catch (err: any) {
+          console.warn('Failed to send text message to ElevenLabs:', err);
+        }
+      } else {
+        // Mock simulation turn-taking
+        setTimeout(() => {
+          generateAgentReply(textToSend);
+        }, 750);
+      }
     },
-    [callState, generateAgentReply]
+    [callState, conversation, generateAgentReply]
   );
 
-  // Start Voice Test Call with real Web Audio analyser
+  // Start Voice Test Call (Live ElevenLabs or Mock)
   const handleStartCall = async () => {
     if (!selectedAgent) return;
 
@@ -268,12 +308,11 @@ export const VoiceTestingPage: React.FC = () => {
     }
 
     try {
+      // 1. Request microphone permission
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       mediaStreamRef.current = stream;
 
-      setCallState('connecting');
-
-      // Setup Web Audio API analyser for genuine audio input levels
+      // 2. Setup Web Audio API analyser for genuine real-time audio input visualizer
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       const audioCtx = new AudioCtx();
       audioContextRef.current = audioCtx;
@@ -285,14 +324,13 @@ export const VoiceTestingPage: React.FC = () => {
       source.connect(analyser);
       analyserRef.current = analyser;
 
-      // Start reading real microphone volume
+      // Live volume & bar animation loop
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       const updateAudioVisuals = () => {
         if (!analyserRef.current) return;
 
         analyserRef.current.getByteFrequencyData(dataArray);
 
-        // Calculate average volume
         let sum = 0;
         for (let i = 0; i < dataArray.length; i++) {
           sum += dataArray[i];
@@ -300,9 +338,6 @@ export const VoiceTestingPage: React.FC = () => {
         const avg = sum / dataArray.length;
         const normalized = Math.min(100, Math.round((avg / 128) * 100));
         setAudioLevel(normalized);
-
-        // Check if user is speaking
-        setIsCallerSpeaking(normalized > 12);
 
         // Generate 7 frequency bar heights (4px min, 36px max)
         const step = Math.floor(dataArray.length / 7) || 1;
@@ -319,54 +354,48 @@ export const VoiceTestingPage: React.FC = () => {
 
       animFrameRef.current = requestAnimationFrame(updateAudioVisuals);
 
-      // Optional SpeechRecognition setup for speech-to-text
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        try {
-          const recognition = new SpeechRecognition();
-          recognition.continuous = true;
-          recognition.interimResults = false;
-          recognition.lang = 'en-US';
+      if (!IS_MOCK_MODE) {
+        // --- REAL ELEVENLABS BROWSER SESSION VIA FASTAPI AUTHORIZATION ---
+        setCallState('connecting');
 
-          recognition.onresult = (event: any) => {
-            const last = event.results.length - 1;
-            const text = event.results[last][0].transcript;
-            if (text && text.trim().length > 0) {
-              handleSendCallerMessage(text);
-            }
-          };
-
-          recognition.start();
-          speechRecognitionRef.current = recognition;
-        } catch {
-          // Speech recognition is optional progressive enhancement
+        const targetAgentId = selectedAgent.agent_id || selectedAgent.id;
+        if (!targetAgentId) {
+          throw new Error('Selected agent does not have a provisioned ElevenLabs agent_id.');
         }
+
+        // Authorize with backend without exposing secrets
+        const sessionData = await agentService.authorizeSession(targetAgentId);
+        if (!sessionData || !sessionData.signed_url) {
+          throw new Error('Backend failed to return an authorized signed WebSocket URL.');
+        }
+
+        // Connect directly to ElevenLabs WebSocket using official SDK hook
+        setTranscript([]);
+        await conversation.startSession({
+          signedUrl: sessionData.signed_url
+        });
+      } else {
+        // --- SIMULATED MOCK MODE ---
+        setCallState('connected');
+        setCallDuration(0);
+        setIsMuted(false);
+
+        callTimerRef.current = window.setInterval(() => {
+          setCallDuration((prev) => prev + 1);
+        }, 1000);
+
+        const greeting = selectedAgent.firstMessage || 'Hello! How may I assist you today?';
+        const initialItem: TranscriptItem = {
+          id: `msg-initial-${Date.now()}`,
+          sender: 'agent',
+          text: greeting,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        };
+        setTranscript([initialItem]);
+        speakAgentMessage(greeting);
       }
-
-      // Initialize Call State
-      setCallState('connected');
-      setCallDuration(0);
-      setIsMuted(false);
-
-      // Start call timer
-      callTimerRef.current = window.setInterval(() => {
-        setCallDuration((prev) => prev + 1);
-      }, 1000);
-
-      // Initialize transcript with Agent Greeting
-      const greeting = selectedAgent.firstMessage || 'Hello! How may I assist you today?';
-      const initialItem: TranscriptItem = {
-        id: `msg-initial-${Date.now()}`,
-        sender: 'agent',
-        text: greeting,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-      };
-      setTranscript([initialItem]);
-
-      // Speak initial message
-      speakAgentMessage(greeting);
     } catch (err: any) {
+      cleanupAudio();
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         setCallState('permission_denied');
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
@@ -374,30 +403,46 @@ export const VoiceTestingPage: React.FC = () => {
         setErrorMessage('No microphone audio input device was found on this system.');
       } else {
         setCallState('error');
-        setErrorMessage(err.message || 'Unable to access microphone audio.');
+        setErrorMessage(err.message || 'Unable to establish voice session with ElevenLabs.');
       }
     }
   };
 
   // End Call
-  const handleEndCall = () => {
+  const handleEndCall = async () => {
+    if (!IS_MOCK_MODE) {
+      try {
+        await conversation.endSession();
+      } catch {
+        // Safe clean teardown
+      }
+    }
     cleanupAudio();
     setCallState('ended');
   };
 
   // Toggle Microphone Mute
   const toggleMute = () => {
+    const nextMuteState = !isMuted;
+    if (!IS_MOCK_MODE) {
+      try {
+        conversation.setMuted(nextMuteState);
+      } catch {
+        // Fallback
+      }
+    }
+
     if (mediaStreamRef.current) {
       const audioTracks = mediaStreamRef.current.getAudioTracks();
-      const nextMuteState = !isMuted;
       audioTracks.forEach((track) => {
         track.enabled = !nextMuteState;
       });
-      setIsMuted(nextMuteState);
-      if (nextMuteState) {
-        setAudioLevel(0);
-        setFrequencyBars([4, 4, 4, 4, 4, 4, 4]);
-      }
+    }
+
+    setIsMuted(nextMuteState);
+    if (nextMuteState) {
+      setAudioLevel(0);
+      setFrequencyBars([4, 4, 4, 4, 4, 4, 4]);
     }
   };
 
@@ -407,7 +452,7 @@ export const VoiceTestingPage: React.FC = () => {
       handleEndCall();
     }
     setSearchParams({ agentId: newAgentId });
-    const match = agents.find((a) => a.id === newAgentId);
+    const match = agents.find((a) => a.id === newAgentId || a.agent_id === newAgentId);
     if (match) {
       setSelectedAgent(match);
       setTranscript([]);
@@ -435,7 +480,9 @@ export const VoiceTestingPage: React.FC = () => {
           'Who can I speak with regarding my account?'
         ];
 
-  const selectedVoiceInfo = voices.find((v) => v.id === selectedAgent?.voiceId);
+  const selectedVoiceInfo = voices.find(
+    (v) => v.id === selectedAgent?.voiceId || v.elevenLabsVoiceId === selectedAgent?.voiceId
+  );
 
   return (
     <div className="vf-container" style={{ maxWidth: '1060px', paddingBottom: '3rem' }}>
@@ -478,7 +525,11 @@ export const VoiceTestingPage: React.FC = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
             <h1 style={{ fontSize: '1.85rem' }}>Voice Testing Studio</h1>
-            <Badge variant="mock">Simulation Mode</Badge>
+            {IS_MOCK_MODE ? (
+              <Badge variant="mock">Simulation Mode</Badge>
+            ) : (
+              <Badge variant="active" dot>ElevenLabs Live Stream</Badge>
+            )}
           </div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
             Real-time interactive audio room with live microphone frequency detection & conversational turn-taking
@@ -493,10 +544,10 @@ export const VoiceTestingPage: React.FC = () => {
             </label>
             <select
               id="agent-select"
-              value={selectedAgent?.id || ''}
+              value={selectedAgent?.id || selectedAgent?.agent_id || ''}
               onChange={(e) => handleAgentSelect(e.target.value)}
               className="vf-select"
-              style={{ padding: '0.4rem 0.75rem', fontSize: '0.825rem', minWidth: '200px' }}
+              style={{ padding: '0.4rem 0.75rem', fontSize: '0.825rem', minWidth: '220px' }}
             >
               {agents.map((a) => (
                 <option key={a.id} value={a.id}>
@@ -508,7 +559,7 @@ export const VoiceTestingPage: React.FC = () => {
         )}
       </div>
 
-      {/* Honest Simulation Disclaimer Notice */}
+      {/* Honest Mode Notice Banner */}
       <div
         style={{
           backgroundColor: 'var(--bg-surface-raised)',
@@ -525,8 +576,17 @@ export const VoiceTestingPage: React.FC = () => {
       >
         <Radio size={16} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
         <div>
-          <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Local Studio Testing: </strong>
-          Your microphone input and audio levels are real-time Web Audio API streams. Voice replies use browser speech synthesis until your teammate connects the FastAPI ElevenLabs WebSocket endpoint.
+          {IS_MOCK_MODE ? (
+            <>
+              <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Local Studio Testing: </strong>
+              Microphone input and audio levels are real-time Web Audio API streams. Voice replies use browser speech synthesis.
+            </>
+          ) : (
+            <>
+              <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>ElevenLabs Conversational AI: </strong>
+              Live browser audio room authorized via FastAPI (<code style={{ color: 'var(--accent-primary)', backgroundColor: 'var(--bg-surface)', padding: '0.1rem 0.3rem', borderRadius: '3px' }}>POST /api/agents/{'{agent_id}'}/session</code>). Audio streams bidirectionally in real-time over secure WebSocket.
+            </>
+          )}
         </div>
       </div>
 
@@ -631,9 +691,23 @@ export const VoiceTestingPage: React.FC = () => {
                 <h2 style={{ fontSize: '1.4rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
                   {selectedAgent.name}
                 </h2>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                   {selectedAgent.businessName} • {selectedAgent.language || 'English (US)'}
                 </p>
+
+                {selectedAgent.agent_id && (
+                  <div
+                    style={{
+                      fontSize: '0.72rem',
+                      color: 'var(--text-muted)',
+                      fontFamily: 'monospace',
+                      marginBottom: '1.25rem',
+                      wordBreak: 'break-all'
+                    }}
+                  >
+                    ElevenLabs ID: {selectedAgent.agent_id}
+                  </div>
+                )}
 
                 {/* State-specific UI Central Element */}
                 <div
@@ -709,10 +783,12 @@ export const VoiceTestingPage: React.FC = () => {
                         }}
                       />
                       <h4 style={{ fontSize: '0.92rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-                        Connecting Audio Session...
+                        {IS_MOCK_MODE ? 'Connecting Audio Session...' : 'Authorizing ElevenLabs Session...'}
                       </h4>
                       <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                        Initializing Web Audio analyzer & synthesis pipeline.
+                        {IS_MOCK_MODE
+                          ? 'Initializing Web Audio analyzer & synthesis pipeline.'
+                          : 'Requesting signed WebSocket URL & connecting to ElevenLabs...'}
                       </p>
                     </div>
                   )}
@@ -767,7 +843,7 @@ export const VoiceTestingPage: React.FC = () => {
                           ? 'Microphone Muted'
                           : isCallerSpeaking
                           ? 'Listening to You...'
-                          : 'Connected • Ready'}
+                          : 'Connected • Listening'}
                       </div>
 
                       {/* Timer */}
@@ -864,10 +940,10 @@ export const VoiceTestingPage: React.FC = () => {
                     <div style={{ textAlign: 'left', padding: '0 0.5rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--status-danger)', marginBottom: '0.4rem', fontWeight: 600, fontSize: '0.85rem' }}>
                         <AlertCircle size={16} />
-                        <span>Audio Error</span>
+                        <span>Session Error</span>
                       </div>
                       <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                        {errorMessage || 'Unable to establish the audio pipeline.'}
+                        {errorMessage || 'Unable to establish the audio session.'}
                       </p>
                     </div>
                   )}
@@ -995,7 +1071,9 @@ export const VoiceTestingPage: React.FC = () => {
                       Click <strong>"Start Voice Test Call"</strong> to begin.
                     </p>
                     <p style={{ fontSize: '0.78rem' }}>
-                      The receptionist will greet you with their configured first message.
+                      {IS_MOCK_MODE
+                        ? 'The receptionist will greet you with their configured first message.'
+                        : 'The ElevenLabs agent will stream live voice over WebSocket.'}
                     </p>
                   </div>
                 ) : (

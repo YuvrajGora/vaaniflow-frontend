@@ -162,7 +162,11 @@ export const StructuredConfigEditor: React.FC<StructuredConfigEditorProps> = ({
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-display)', margin: 0 }}>
               Draft Configuration
             </h2>
-            {isMockGenerated && <Badge variant="mock">Local Demo Synthesis</Badge>}
+            {isMockGenerated ? (
+              <Badge variant="mock">Local Demo Synthesis</Badge>
+            ) : (
+              <Badge variant="active" dot>Gemini Draft Preview</Badge>
+            )}
           </div>
           {originalPrompt && (
             <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic', maxWidth: '650px' }}>

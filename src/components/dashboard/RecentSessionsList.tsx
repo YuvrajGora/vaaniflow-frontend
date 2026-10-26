@@ -162,10 +162,12 @@ export const RecentSessionsList: React.FC<RecentSessionsListProps> = ({
       <Card style={{ textAlign: 'center', padding: '3rem 2rem', backgroundColor: 'var(--bg-surface-warm)' }}>
         <Clock size={28} style={{ color: 'var(--text-muted)', margin: '0 auto 0.75rem' }} />
         <h3 style={{ fontSize: '1.1rem', fontFamily: 'var(--font-display)', marginBottom: '0.25rem' }}>
-          No session history recorded
+          {IS_MOCK_MODE ? 'No session history recorded' : 'Live WebSocket Sessions (No Server Persistence)'}
         </h3>
-        <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-          Inbound calls handled by your receptionists will appear here with summaries and transcript snippets.
+        <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto' }}>
+          {IS_MOCK_MODE
+            ? 'Inbound calls handled by your receptionists will appear here with summaries and transcript snippets.'
+            : 'Calls stream directly over real-time WebSockets with ElevenLabs. The backend prototype does not implement persistent database logging for audio sessions.'}
         </p>
       </Card>
     );

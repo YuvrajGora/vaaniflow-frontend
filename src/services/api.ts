@@ -3,6 +3,9 @@
 // ==========================================================================
 import type {
   Agent,
+  BackendGeneratedAgentConfig,
+  BackendHealthResponse,
+  BackendSessionResponse,
   BusinessTemplate,
   DashboardMetrics,
   GenerateAgentPromptInput,
@@ -32,6 +35,7 @@ export interface CreateAgentInput {
   escalationTriggers?: string[];
   fallbackMessage?: string;
   generatedFromPrompt?: string;
+  rawBackendConfig?: BackendGeneratedAgentConfig;
 }
 
 export interface UpdateAgentInput extends Partial<CreateAgentInput> {
@@ -42,6 +46,7 @@ export interface AgentApiClient {
   isMockMode: boolean;
   apiBaseUrl: string;
 
+  checkHealth(): Promise<BackendHealthResponse>;
   getDashboardMetrics(): Promise<DashboardMetrics>;
   getAgents(): Promise<Agent[]>;
   getAgentById(id: string): Promise<Agent | null>;
@@ -55,4 +60,7 @@ export interface AgentApiClient {
   // Prompt-First Generation & Natural Language Refinement
   generateFromPrompt(input: GenerateAgentPromptInput): Promise<GeneratedAgentConfig>;
   refineConfiguration(input: RefineAgentPromptInput): Promise<GeneratedAgentConfig>;
+
+  // Live session authorization for browser audio connection
+  authorizeSession(agentId: string): Promise<BackendSessionResponse>;
 }

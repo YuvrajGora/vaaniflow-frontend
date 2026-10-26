@@ -113,7 +113,11 @@ export const SessionHistoryPage: React.FC = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
             <h1 style={{ fontSize: '1.85rem' }}>Call Session Logs</h1>
-            {IS_MOCK_MODE && <Badge variant="mock">Sample Session Feed</Badge>}
+            {IS_MOCK_MODE ? (
+              <Badge variant="mock">Sample Session Feed</Badge>
+            ) : (
+              <Badge variant="muted">Live Stream (Unpersisted)</Badge>
+            )}
           </div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
             Review past caller conversations, appointment outcomes, and transcript audits
@@ -140,6 +144,23 @@ export const SessionHistoryPage: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {!IS_MOCK_MODE && (
+        <div
+          style={{
+            backgroundColor: 'var(--bg-surface-raised)',
+            border: '1px solid var(--border-default)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '0.75rem 1rem',
+            marginBottom: '1.5rem',
+            fontSize: '0.8rem',
+            color: 'var(--text-secondary)'
+          }}
+        >
+          <strong style={{ color: 'var(--text-primary)' }}>Prototype Notice: </strong>
+          Persistent database logging for caller session recordings is not implemented on the backend. Live conversations are authorized and streamed in real-time via WebSockets in the Voice Testing Studio.
+        </div>
+      )}
 
       {/* Metrics Summary Strip */}
       <div

@@ -216,8 +216,10 @@ class HttpAgentApiClient implements AgentApiClient {
         ...input.rawBackendConfig,
         agent_name: input.name,
         business_type: input.businessType || input.rawBackendConfig.business_type,
+        primary_language: input.language === 'hi' || input.language === 'Hindi' ? 'hi' : (input.language || input.rawBackendConfig.primary_language),
         first_message: input.firstMessage,
         system_prompt: input.instructions,
+        intended_capabilities: input.goals && input.goals.length > 0 ? input.goals : input.rawBackendConfig.intended_capabilities,
         voice_preference: {
           ...input.rawBackendConfig.voice_preference,
           voice_id: resolvedVoiceId
